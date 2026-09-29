@@ -1,26 +1,608 @@
+/* =============================================================================
+   globals.css — "bold and colorful" neo-brutalist design system
+   -----------------------------------------------------------------------------
+   TAILWIND v4 (CSS-FIRST) — this project intentionally has NO tailwind.config.ts.
+   In v4 the design tokens are declared with the `@theme` directive below, which
+   generates the matching utilities automatically:
+
+     --color-mint        ->  bg-mint / text-mint / border-mint
+     --shadow-brutal     ->  shadow-brutal
+     --radius-card       ->  rounded-card
+
+   If you ever migrate to Tailwind v3, these exact same values can be pasted
+   into a tailwind.config.ts `theme.extend` block unchanged.
+   ========================================================================== */
+
 @import "tailwindcss";
 
+/* -----------------------------------------------------------------------------
+   1. DARK MODE STRATEGY
+   -----------------------------------------------------------------------------
+   By default v4's `dark:` variant follows `prefers-color-scheme`. We re-declare
+   it as a CLASS-based variant so the manual navbar toggle can override the OS
+   preference. The inline script in layout.tsx applies `.dark` to <html> from
+   localStorage first, falling back to the OS preference.
+   -------------------------------------------------------------------------- */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* -----------------------------------------------------------------------------
+   2. SEMANTIC TOKENS
+   -----------------------------------------------------------------------------
+   Declared as plain CSS custom properties (not inside @theme) so that the
+   `.dark` class can swap their values at runtime. The dark values are *muted*
+   descendants of the light palette, tuned so that cream text on top of each
+   card clears WCAG AA (verified >= 4.5:1).
+   -------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg: #fff3d6; /* cream page background */
+  --fg: #1b1b1b; /* near-black: text, 3px borders, shadows */
+  --surface: #ffffff; /* white card / tile surface */
+  --accent: #ff5c39; /* orange-red accent */
+  --accent-contrast: #ffffff; /* LARGE text on --accent (hero highlight) */
+  --accent-ink: #1b1b1b; /* NORMAL text on --accent (buttons, selection) */
+
+  /* Bright card palette */
+  --mint: #a8e6cf;
+  --peach: #ffd3b6;
+  --periwinkle: #c7ceea;
+  --pink: #ffaaa5;
+
+  /* Hard offset shadows — deliberately zero blur */
+  --shadow-color: #1b1b1b;
+  --shadow-brutal: 6px 6px 0 var(--shadow-color);
+  --shadow-brutal-lg: 8px 8px 0 var(--shadow-color);
+
+  /* Focus ring tracks the foreground so it clears 3:1 against every light
+     surface (page bg, white, and all four pastels). An accent-coloured ring
+     only managed 2.78:1 on the cream background. */
+  --focus: #1b1b1b;
+
+  /* Background decoration (see section 7). Kept as tokens so the light and
+     dark palettes can use completely different values. */
+  --grid-line: rgba(27, 27, 27, 0.07); /* faint dotted grid */
+  --blob-1: rgba(255, 92, 57, 0.16); /* accent */
+  --blob-2: rgba(199, 206, 234, 0.5); /* periwinkle */
+  --blob-3: rgba(168, 230, 207, 0.45); /* mint */
+  --blob-4: rgba(255, 170, 165, 0.4); /* pink */
 }
 
+/* Dark palette. `html.dark` (0,1,1) intentionally outranks `:root` (0,1,0). */
+html.dark {
+  color-scheme: dark;
+
+  --bg: #1c1a16;
+  --fg: #fff3d6;
+  --surface: #2a2620;
+  --accent: #ff5c39;
+  --accent-contrast: #ffffff;
+  --accent-ink: #1b1b1b;
+
+  /* Muted card palette */
+  --mint: #2f5d4b;
+  --peach: #6e4a32;
+  --periwinkle: #3b4270;
+  --pink: #703b38;
+
+  /* Pure black reads better than ink on a near-black background */
+  --shadow-color: #000000;
+
+  --focus: #fff3d6;
+
+  /* On near-black, decoration needs to be *lighter* than the surface to read at
+     all, so the roles invert: the grid glows slightly and the blobs brighten
+     the page instead of tinting it. */
+  --grid-line: rgba(255, 243, 214, 0.09);
+  --blob-1: rgba(255, 92, 57, 0.2);
+  --blob-2: rgba(99, 108, 170, 0.42);
+  --blob-3: rgba(62, 122, 99, 0.38);
+  --blob-4: rgba(151, 78, 73, 0.36);
+}
+
+/* -----------------------------------------------------------------------------
+   3. TAILWIND TOKEN MAPPING
+   -----------------------------------------------------------------------------
+   `@theme inline` emits `var(--mint)` etc. *inside* the generated utilities
+   rather than copying the literal value. That is what lets a utility react to
+   the `.dark` class instead of being frozen at build time.
+   -------------------------------------------------------------------------- */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-surface: var(--surface);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-accent-ink: var(--accent-ink);
+  --color-mint: var(--mint);
+  --color-peach: var(--peach);
+  --color-periwinkle: var(--periwinkle);
+  --color-pink: var(--pink);
+
+  --shadow-brutal: var(--shadow-brutal);
+  --shadow-brutal-lg: var(--shadow-brutal-lg);
+
+  --radius-card: 16px;
+
+  /*
+   * Prose and UI text. `--font-body` is published on <html> by next/font
+   * (Inter); the system stack behind it keeps the page readable if the webfont
+   * is slow, blocked, or fails outright.
+   */
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+    sans-serif;
+
+  /*
+   * The display face and the width it is set at, kept as two plain custom
+   * properties rather than a `--font-*` theme key on purpose.
+   *
+   * Naming them `--font-display` would make Tailwind auto-generate a
+   * `font-display` utility that sets *only* `font-family` — so a non-heading
+   * element (the stat figures) could end up on the display face at full width
+   * while every heading was condensed. Keeping them here and writing the
+   * utility by hand below means the face and its width always travel together,
+   * and `font-stretch` has exactly one home.
+   *
+   * `--font-heading-face` is Bricolage Grotesque, published on <html> by
+   * next/font. The system stack behind it is the same fallback `--font-sans`
+   * uses, so a webfont that never arrives degrades to the same result either
+   * way.
+   */
+  --display-stack: var(--font-heading-face), ui-sans-serif, system-ui,
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif;
+
+  /*
+   * Drives the face's `wdth` axis. Bricolage is wide at weight 900 and the hero
+   * heading needed ~130px more than line 1 had spare, so it spilled onto a
+   * third line and pushed the stat tiles below the fold on a phone. 85%
+   * restores the original line count at every width.
+   *
+   * `font-stretch` is used in preference to `font-variation-settings` because it
+   * maps onto the width axis on its own and leaves `font-weight` — and so the
+   * `font-black` / `font-extrabold` utilities — in charge of weight.
+   */
+  --display-stretch: 85%;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Opt an element into the display face: the hero stat figures, mostly. */
+@utility font-display {
+  font-family: var(--display-stack);
+  font-stretch: var(--display-stretch);
+}
+
+/* -----------------------------------------------------------------------------
+   4. BASE LAYER
+   -------------------------------------------------------------------------- */
+@layer base {
+  html {
+    /* Smooth in-page navigation for the sticky-nav anchor links. */
+    scroll-behavior: smooth;
+    /* Stop the sticky navbar from covering a section heading on jump. */
+    scroll-padding-top: 6rem;
+
+    /*
+     * Entrance animations translate elements a few pixels sideways, and a
+     * transformed element *does* contribute to scrollable overflow. `clip`
+     * contains that without creating a scroll container, which `hidden`
+     * would — and a scroll container on <html> breaks `position: sticky`
+     * on the navbar.
+     */
+    overflow-x: clip;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+
+    /* Respect notches / rounded corners in landscape on mobile. */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+
+    /* Same reasoning as above, for whichever viewport is the narrower one. */
+    overflow-x: clip;
+  }
+
+  /*
+   * Headings run on the display face so the name, the section titles and the
+   * card titles read as a different voice from the body copy — one rule covers
+   * all five heading levels instead of tagging each with a utility.
+   *
+   * It reads the same two custom properties as the `font-display` utility, so a
+   * heading and a stat figure are always set identically.
+   *
+   * This lives in the base layer, so an explicit `font-sans` or `font-display`
+   * on an individual heading still wins: utilities are emitted later.
+   */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--display-stack);
+    font-stretch: var(--display-stretch);
+  }
+
+  /* One consistent, high-contrast focus ring across the whole site. */
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--accent-ink);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* -----------------------------------------------------------------------------
+   5. MOTION PREFERENCES
+   -----------------------------------------------------------------------------
+   `prefers-reduced-motion: reduce` users get the layout and the hard shadows
+   but none of the movement.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+
+    /*
+     * Delays must be cleared too, not just durations. Collapsing a duration
+     * to ~0 while leaving a 300ms delay in place would hold the element in
+     * its *starting* state for 300ms and then snap it in — a delayed flash,
+     * which is the opposite of "show content instantly".
+     */
+    animation-delay: 0ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   6. COMPONENT PRIMITIVES
+   -----------------------------------------------------------------------------
+   A few repeated shapes live here so component markup stays readable and the
+   3px-border / 999px-radius / hard-shadow rules are defined in exactly one place.
+   -------------------------------------------------------------------------- */
+@layer components {
+  /* The neo-brutalist outline: 3px solid in the current text colour. */
+  .brutal-border {
+    border: 3px solid var(--fg);
+  }
+
+  /* Pill shape for every button and tag. */
+  .brutal-pill {
+    border-radius: 999px;
+  }
+
+  /* Hero highlight block: the word "talk." on an orange-red plate. */
+  /* (Resting state lives in section 9, next to the hero-pop keyframes.) */
+
+  /* Short 56x6px accent rule under every section heading. */
+  .heading-underline {
+    display: block;
+    width: 56px;
+    height: 6px;
+    background-color: var(--accent);
+    border-radius: 999px;
+  }
+}
+
+/* =============================================================================
+   7. BACKGROUND DECORATION
+   -----------------------------------------------------------------------------
+   A fixed, non-interactive backdrop behind all content: a dotted grid plus four
+   large drifting colour blobs. It is deliberately GPU-cheap and invisible to
+   assistive tech.
+
+   Three rules keep it from hurting the page:
+
+   1. `position: fixed` + `pointer-events: none` + `z-index: -1` means it never
+      intercepts clicks, never scrolls with the document, and never creates a
+      scrollbar. It also cannot shift layout, so CLS stays at 0.
+   2. Only `transform` and `opacity` are animated. Both are composited on the
+      GPU, so the drift does not trigger layout or paint on every frame.
+   3. Opacity is capped low (see the --blob-* tokens) so body text contrast is
+      unchanged. The blobs sit *behind* text, never under it.
+   ============================================================================= */
+
+/* The fixed backdrop itself. */
+.bg-decor {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Dotted grid, drawn with a radial gradient so it costs no extra requests.
+   24px cells match the 3px-border / 8px-grid feel of the rest of the design. */
+.bg-decor::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--grid-line) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  /* Fade the grid out toward the edges so it reads as texture, not a table. */
+  mask-image: radial-gradient(ellipse 120% 80% at 50% 0%, #000 20%, transparent 75%);
+}
+
+/* Soft colour wash. Two stacked gradients on one element keep the node count
+   (and therefore the paint cost) low. */
+.bg-decor::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(
+      38rem 38rem at 12% 8%,
+      var(--blob-1),
+      transparent 65%
+    ),
+    radial-gradient(
+      34rem 34rem at 88% 22%,
+      var(--blob-2),
+      transparent 65%
+    ),
+    radial-gradient(
+      40rem 40rem at 78% 72%,
+      var(--blob-3),
+      transparent 65%
+    ),
+    radial-gradient(
+      30rem 30rem at 18% 85%,
+      var(--blob-4),
+      transparent 65%
+    );
+  animation: bg-drift 26s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+/* Slow, small-amplitude drift. A few percent of travel is enough to make the
+   page feel alive without ever looking like it is moving. */
+@keyframes bg-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-2.5%, 1.5%, 0) scale(1.06);
+  }
+}
+
+/* Reduced motion: freeze the drift rather than removing the decoration, so the
+   page keeps its texture but never animates. The global reduced-motion block
+   already neutralises the timing; this makes the intent explicit. */
+@media (prefers-reduced-motion: reduce) {
+  .bg-decor::after {
+    animation: none;
+    will-change: auto;
+  }
+}
+
+/* =============================================================================
+   8. SCROLL REVEAL
+   -----------------------------------------------------------------------------
+   The entrance states for <Reveal>, kept in CSS rather than in JSX so the
+   browser can interpolate them and React never has to write a transform on
+   every frame.
+
+   The contract with the component is two data attributes:
+
+     data-reveal="pending"   not yet animated — offset and/or transparent
+     data-reveal="in"        arrived — reset to its natural position
+     data-reveal-from="up"   which direction to arrive from (see Reveal.tsx)
+
+   Crucially there is no `hidden`-by-default rule that applies before
+   hydration. The server renders `data-reveal="in"`, so the initial HTML is
+   fully visible; React flips the attribute to "pending" once it is running.
+   ============================================================================= */
+
+@layer components {
+  /*
+   * The transition is declared on the *destination* state only.
+
+   * This is deliberate. Elements are server-rendered as "in" (visible, so the
+   * page works with no JavaScript) and are only flipped to "pending" once a
+   * layout effect has proved they are below the fold. If the transition lived
+   * on both states, every one of those elements would animate *out* from
+   * opacity 1 to 0 — a second, wasted animation running off-screen, for every
+   * element on the page at once.
+
+   * With the transition on "in" alone, a flip to "pending" snaps to hidden
+   * immediately (it is off-screen, so nobody sees it happen) and the only
+   * animation that ever plays is the reveal. CSS reads transition properties
+   * from the *after-change* style, so declaring the rule on the same commit
+   * that sets opacity: 1 still animates correctly.
+  */
+  [data-reveal="in"] {
+    transition-property: opacity, transform;
+    transition-duration: var(--motion-duration);
+    transition-timing-function: var(--motion-ease);
+    /* Per-element stagger, set inline by <Reveal delay>. */
+    transition-delay: var(--reveal-delay, 0ms);
+
+    opacity: 1;
+    transform: none;
+  }
+
+  [data-reveal="pending"] {
+    opacity: 0;
+  }
+
+  /* Directional offsets. `up` is the default so the bare attribute works. */
+  [data-reveal="pending"][data-reveal-from="up"],
+  [data-reveal="pending"]:not([data-reveal-from]) {
+    transform: translate3d(0, var(--motion-distance), 0);
+  }
+
+  [data-reveal="pending"][data-reveal-from="down"] {
+    transform: translate3d(0, calc(-1 * var(--motion-distance)), 0);
+  }
+
+  /* The tilt on `left`/`right` is the "slight rotation that settles" — it
+     overshoots the axis of travel, then resolves to none. */
+  [data-reveal="pending"][data-reveal-from="left"] {
+    transform: translate3d(calc(-1 * var(--motion-distance)), 0, 0)
+      rotate(-4deg);
+  }
+
+  [data-reveal="pending"][data-reveal-from="right"] {
+    transform: translate3d(var(--motion-distance), 0, 0) rotate(4deg);
+  }
+
+  /* Contact card: fades while growing from 95% to 100%. */
+  [data-reveal="pending"][data-reveal-from="scale"] {
+    transform: scale(0.95);
+  }
+
+  /* The heading underline. scaleX rather than an animated `width` so the
+     element's layout box never changes and its siblings never reflow. */
+  [data-reveal="pending"][data-reveal-from="scaleX"] {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+
+  /* "none" and "up" both fade; "up" adds the offset above. Nothing to do. */
+}
+
+/* =============================================================================
+   9. KEYFRAMES
+   -----------------------------------------------------------------------------
+   Two animations that CSS runs on its own. Both animate only `transform` and
+   `opacity`, so both stay on the compositor.
+   ============================================================================= */
+
+/* Hero "talk." block: pops in with a small overshoot, then settles back onto
+   its -1.5deg rotation. `backwards` fill means it holds the compressed
+   0% frame during the delay rather than flashing at full size first. */
+@keyframes hero-pop {
+  0% {
+    transform: scale(0.55) rotate(-6deg);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.12) rotate(1.5deg);
+    opacity: 1;
+  }
+  78% {
+    transform: scale(0.97) rotate(-2deg);
+  }
+  100% {
+    /* Matches the resting .hero-highlight rotation exactly, so the hand-off
+       from animation to static style is invisible. */
+    transform: scale(1) rotate(-1.5deg);
+    opacity: 1;
+  }
+}
+
+/* Contact button hover bounce. Animates only `scale`, which in Tailwind v4 is
+   its own composited property — so it layers on top of the `translate` hover
+   lift already on .btn rather than fighting it for the transform slot. */
+@keyframes btn-bounce {
+  0% {
+    scale: 1;
+  }
+  38% {
+    scale: 1.07;
+  }
+  70% {
+    scale: 0.97;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+@layer components {
+  .hero-highlight {
+    display: inline-block;
+    background-color: var(--accent);
+    color: var(--accent-contrast);
+    padding-inline: 0.12em;
+    border-radius: 0.14em;
+    transform: rotate(-1.5deg);
+
+    /* Only runs when the hero marks the block as animating; the static
+       rotation above is the resting state, so this is opt-in. */
+    animation-name: hero-pop;
+    animation-duration: var(--motion-pop-duration, 420ms);
+    animation-timing-function: var(--motion-pop-ease, cubic-bezier(0.34, 1.56, 0.64, 1));
+    animation-fill-mode: backwards;
+  }
+
+  /* Opt-in trigger: Hero adds data-hero-pop once the page has hydrated. */
+  [data-hero-pop] .hero-highlight {
+    animation-delay: var(--hero-pop-delay, 300ms);
+  }
+
+  .btn-bounce:hover {
+    animation: btn-bounce var(--motion-bounce-duration, 320ms)
+      var(--motion-bounce-ease, cubic-bezier(0.34, 1.56, 0.64, 1));
+  }
+}
+
+/* =============================================================================
+   10. REDUCED MOTION — REVEAL AND KEYFRAMES
+   -----------------------------------------------------------------------------
+   Belt and braces alongside the checks in Reveal.tsx and CountUp.tsx. Even if
+   JavaScript has not hydrated yet, or the observer never fires, this pins
+   every reveal to its final, visible state.
+   ============================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal],
+  [data-reveal="in"],
+  [data-reveal="pending"] {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Keep the tilt but drop the movement, so the hero block does not jump to
+     an unrotated state on load. */
+  .hero-highlight {
+    animation: none !important;
+  }
+
+  .btn-bounce:hover {
+    animation: none !important;
+  }
+}
+
+/* =============================================================================
+   11. PRINT
+   -----------------------------------------------------------------------------
+   A reveal only plays when the reader scrolls to it, so at any given moment a
+   set of sections is legitimately sitting at opacity 0. Printing the page — or
+   saving it as a PDF, which is a normal thing to do with a portfolio — would
+   faithfully reproduce that hidden state and emit blank sections.
+
+   Printing flattens the whole document, so force every reveal to its final
+   state, and drop the scrolling furniture, which is meaningless on paper.
+   ============================================================================= */
+@media print {
+  [data-reveal],
+  [data-reveal="in"],
+  [data-reveal="pending"] {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .bg-decor,
+  header {
+    display: none !important;
+  }
 }
