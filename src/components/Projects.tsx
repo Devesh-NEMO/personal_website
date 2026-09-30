@@ -6,6 +6,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Tag } from "@/components/ui/Tag";
 import { projects } from "@/data/projects";
+import { trackAttrs } from "@/lib/analytics";
 import { motion } from "@/lib/constants";
 import { toneOrder } from "@/lib/tone";
 
@@ -89,6 +90,7 @@ export function Projects() {
                    contained in the accessible name (axe label-content-name-mismatch). */
                 aria-label={`View project: ${project.title}`}
                 className="mt-auto inline-flex items-center gap-1.5 pt-1 text-sm font-extrabold tracking-tight underline decoration-[3px] underline-offset-4 transition-colors hover:decoration-accent"
+                {...trackAttrs("project_click", { name: project.title })}
               >
                 View project
                 <svg

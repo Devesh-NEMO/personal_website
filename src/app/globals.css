@@ -62,11 +62,17 @@
 
   /* Background decoration (see section 7). Kept as tokens so the light and
      dark palettes can use completely different values. */
-  --grid-line: rgba(27, 27, 27, 0.07); /* faint dotted grid */
-  --blob-1: rgba(255, 92, 57, 0.16); /* accent */
-  --blob-2: rgba(199, 206, 234, 0.5); /* periwinkle */
-  --blob-3: rgba(168, 230, 207, 0.45); /* mint */
-  --blob-4: rgba(255, 170, 165, 0.4); /* pink */
+  --grid-line: rgba(27, 27, 27, 0.12); /* dotted grid: 12% of the text colour */
+  --blob: rgba(255, 92, 57, 0.2); /* accent wash behind the hero heading */
+  --glow: rgba(255, 92, 57, 0.15); /* cursor-follow glow */
+
+  /* Navbar geometry (see section 10). Tokens rather than literals because the
+     shrink is an expression of the two heights — `.nav-bar[data-scrolled]` picks
+     the second one — and because the container width is shared with the section
+     components. One place to change them, and CSS still gets to do arithmetic. */
+  --nav-h: 64px; /* bar height at the top of the page */
+  --nav-h-scrolled: 52px; /* and once the reader has scrolled */
+  --nav-max-w: 1000px; /* widest the inner container gets */
 }
 
 /* Dark palette. `html.dark` (0,1,1) intentionally outranks `:root` (0,1,0). */
@@ -94,11 +100,9 @@ html.dark {
   /* On near-black, decoration needs to be *lighter* than the surface to read at
      all, so the roles invert: the grid glows slightly and the blobs brighten
      the page instead of tinting it. */
-  --grid-line: rgba(255, 243, 214, 0.09);
-  --blob-1: rgba(255, 92, 57, 0.2);
-  --blob-2: rgba(99, 108, 170, 0.42);
-  --blob-3: rgba(62, 122, 99, 0.38);
-  --blob-4: rgba(151, 78, 73, 0.36);
+  --grid-line: rgba(255, 243, 214, 0.12);
+  --blob: rgba(255, 92, 57, 0.24);
+  --glow: rgba(255, 92, 57, 0.18);
 }
 
 /* -----------------------------------------------------------------------------
@@ -302,95 +306,401 @@ html.dark {
 }
 
 /* =============================================================================
-   7. BACKGROUND DECORATION
+   7. ANIMATED BACKGROUND
    -----------------------------------------------------------------------------
-   A fixed, non-interactive backdrop behind all content: a dotted grid plus four
-   large drifting colour blobs. It is deliberately GPU-cheap and invisible to
-   assistive tech.
+   A fixed, non-interactive backdrop behind the whole page: a drifting dot grid,
+   a morphing accent blob behind the hero heading, nine floating shapes and a
+   cursor-follow glow. Plus a marquee strip in the page flow.
 
-   Three rules keep it from hurting the page:
+   Five rules keep all of it from hurting the page:
 
    1. `position: fixed` + `pointer-events: none` + `z-index: -1` means it never
       intercepts clicks, never scrolls with the document, and never creates a
       scrollbar. It also cannot shift layout, so CLS stays at 0.
-   2. Only `transform` and `opacity` are animated. Both are composited on the
-      GPU, so the drift does not trigger layout or paint on every frame.
-   3. Opacity is capped low (see the --blob-* tokens) so body text contrast is
-      unchanged. The blobs sit *behind* text, never under it.
+   2. `overflow: clip` on the layer stops any shape or drifted grid from ever
+      contributing to document scroll, in either axis.
+   3. Everything moves with `transform` and `opacity`, which are composited on
+      the GPU. The single exception is called out at `bg-anim__blob` below.
+   4. Fills are capped low (the `--shape-opacity` values in data/shapes.ts) and
+      the shapes sit *behind* text, never under it, so contrast is unchanged.
+   5. `prefers-reduced-motion` freezes all of it, and `data-anim-paused` on
+      <html> holds the loops while the tab is in the background.
    ============================================================================= */
 
 /* The fixed backdrop itself. */
-.bg-decor {
+.bg-anim {
   position: fixed;
   inset: 0;
   z-index: -1;
-  overflow: hidden;
+  overflow: clip;
   pointer-events: none;
 }
 
-/* Dotted grid, drawn with a radial gradient so it costs no extra requests.
-   24px cells match the 3px-border / 8px-grid feel of the rest of the design. */
-.bg-decor::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(var(--grid-line) 1.5px, transparent 1.5px);
-  background-size: 24px 24px;
-  /* Fade the grid out toward the edges so it reads as texture, not a table. */
-  mask-image: radial-gradient(ellipse 120% 80% at 50% 0%, #000 20%, transparent 75%);
-}
+/* -----------------------------------------------------------------------------
+   Dot grid
+   -----------------------------------------------------------------------------
+   1.5px dots on a 28px pitch, drawn with a radial gradient so the pattern costs
+   no request and no DOM.
 
-/* Soft colour wash. Two stacked gradients on one element keep the node count
-   (and therefore the paint cost) low. */
-.bg-decor::after {
-  content: "";
+   The drift is a `transform` on an oversized layer rather than an animated
+   `background-position`. They look identical, but `background-position` cannot
+   be composited: the browser re-rasterises the full-viewport gradient on every
+   single frame of a 60-second loop, for ever. A translate is a compositor
+   property, so this version does the work once and then never paints again.
+
+   The travel is exactly two grid cells (56px), which is what makes the loop
+   seamless — a drift by any other distance would visibly jump when it wrapped.
+   The layer is inset past that (80px > 56px) so the overshoot never shows an
+   edge on the side the grid is travelling away from.
+   -------------------------------------------------------------------------- */
+.bg-anim__grid {
   position: absolute;
-  inset: -20%;
-  background:
-    radial-gradient(
-      38rem 38rem at 12% 8%,
-      var(--blob-1),
-      transparent 65%
-    ),
-    radial-gradient(
-      34rem 34rem at 88% 22%,
-      var(--blob-2),
-      transparent 65%
-    ),
-    radial-gradient(
-      40rem 40rem at 78% 72%,
-      var(--blob-3),
-      transparent 65%
-    ),
-    radial-gradient(
-      30rem 30rem at 18% 85%,
-      var(--blob-4),
-      transparent 65%
-    );
-  animation: bg-drift 26s ease-in-out infinite alternate;
+  inset: -80px;
+  background-image: radial-gradient(var(--grid-line) 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+  animation: bg-drift 60s linear infinite;
   will-change: transform;
 }
 
-/* Slow, small-amplitude drift. A few percent of travel is enough to make the
-   page feel alive without ever looking like it is moving. */
 @keyframes bg-drift {
   from {
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0);
   }
   to {
-    transform: translate3d(-2.5%, 1.5%, 0) scale(1.06);
+    transform: translate3d(56px, 56px, 0);
   }
 }
 
-/* Reduced motion: freeze the drift rather than removing the decoration, so the
-   page keeps its texture but never animates. The global reduced-motion block
-   already neutralises the timing; this makes the intent explicit. */
-@media (prefers-reduced-motion: reduce) {
-  .bg-decor::after {
-    animation: none;
-    will-change: auto;
+/* -----------------------------------------------------------------------------
+   Hero blob
+   -----------------------------------------------------------------------------
+   The one deliberate exception to "transforms only": a blob that morphs has to
+   interpolate `border-radius`, and `border-radius` is a paint property, not a
+   compositable one. So this element repaints on every frame of its loop.
+
+   It is affordable here precisely because it is the only such element: one
+   solid-fill shape, no border, no shadow, no blend modes, sized so the repaint
+   stays in the sub-millisecond range. The obvious alternatives are worse — a
+   `clip-path` polygon or a radial-gradient `background-size` animation repaints
+   the same area just as often, and the two-blob `mix-blend-mode` trick trades
+   the repaint for a per-frame blend pass over everything behind it.
+   -------------------------------------------------------------------------- */
+.bg-anim__blob {
+  position: absolute;
+  top: 4%;
+  inset-inline: 0;
+  /* Centred without a transform, which would fight the morph keyframes. */
+  margin-inline: auto;
+  width: min(44rem, 78vw);
+  aspect-ratio: 1;
+  background: var(--blob);
+  /*
+   * The resting shape, and deliberately the same value the keyframes open and
+   * close on. Without it, `animation: none` under reduced motion would drop the
+   * radius to 0 and leave a hard orange square behind the hero heading — the one
+   * case where the decoration would be more noticeable than the animation.
+   */
+  border-radius: 62% 38% 46% 54% / 55% 48% 52% 45%;
+  animation: bg-morph 12s ease-in-out infinite;
+}
+
+@keyframes bg-morph {
+  0%,
+  100% {
+    border-radius: 62% 38% 46% 54% / 55% 48% 52% 45%;
+  }
+  25% {
+    border-radius: 38% 62% 58% 42% / 48% 58% 42% 52%;
+  }
+  50% {
+    border-radius: 52% 48% 36% 64% / 62% 40% 60% 38%;
+  }
+  75% {
+    border-radius: 44% 56% 64% 36% / 40% 52% 48% 60%;
   }
 }
+
+/* -----------------------------------------------------------------------------
+   Floating shapes
+   -----------------------------------------------------------------------------
+   Three nested elements per shape, each owning exactly one CSS property, so the
+   scroll handler and the keyframes can never fight over the same value:
+
+     .deco-shape     position; transform is written here by useParallax
+       .deco-float   transform is animated here by bg-float
+         body/svg    the silhouette: fill, outline, clip-path
+
+   Collapsing these would make the parallax stutter against the float.
+
+   `will-change` is on `.deco-float` only. `.deco-shape` is not promoted: its
+   transform only changes while the user is scrolling, its subtree is already
+   composited by its child, and nine more permanent layers is not a trade worth
+   making for a decorative flourish.
+   -------------------------------------------------------------------------- */
+.deco-shapes {
+  position: absolute;
+  inset: 0;
+}
+
+.deco-shape {
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+}
+
+.deco-float {
+  width: 100%;
+  height: 100%;
+  opacity: var(--shape-opacity);
+  animation: bg-float var(--float-duration) ease-in-out var(--float-delay) infinite;
+  will-change: transform;
+}
+
+@keyframes bg-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--rotate));
+  }
+  50% {
+    transform: translate3d(0, -18px, 0) rotate(calc(var(--rotate) + 7deg));
+  }
+}
+
+/* Tone → fill, once, on the wrapper, so the CSS and the SVG squiggle can both
+   read the same custom property. Accent is deliberately last: it is the loudest
+   colour in the palette and gets one shape. */
+.deco-shape[data-tone="mint"] {
+  --shape-fill: var(--mint);
+}
+.deco-shape[data-tone="peach"] {
+  --shape-fill: var(--peach);
+}
+.deco-shape[data-tone="periwinkle"] {
+  --shape-fill: var(--periwinkle);
+}
+.deco-shape[data-tone="pink"] {
+  --shape-fill: var(--pink);
+}
+.deco-shape[data-tone="accent"] {
+  --shape-fill: var(--accent);
+}
+
+/* Silhouettes. `clip-path` percentages resolve against each element's own
+   reference box, so applying the same value to the fill layer (which is inset
+   by 3px) produces a uniform outline rather than a misaligned copy. */
+.deco-shape[data-kind="circle"] {
+  --shape-radius: 50%;
+}
+.deco-shape[data-kind="triangle"] {
+  --shape-clip: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+.deco-shape[data-kind="plus"] {
+  --shape-clip: polygon(
+    30% 0%,
+    70% 0%,
+    70% 30%,
+    100% 30%,
+    100% 70%,
+    70% 70%,
+    70% 100%,
+    30% 100%,
+    30% 70%,
+    0% 70%,
+    0% 30%,
+    30% 30%
+  );
+}
+.deco-shape[data-kind="star"] {
+  --shape-clip: polygon(
+    50% 0%,
+    61.8% 34.5%,
+    98% 34.5%,
+    68.9% 56%,
+    80.9% 90%,
+    50% 70%,
+    19.1% 90%,
+    31.1% 56%,
+    2% 34.5%,
+    38.2% 34.5%
+  );
+}
+
+/* The outline layer. Painted as a solid silhouette in the text colour with the
+   fill sitting on top, 3px in — that is how a shape gets a hard 3px border
+   without a real border, which `clip-path` would otherwise slice off. */
+.deco-body {
+  width: 100%;
+  height: 100%;
+  background: var(--fg);
+  border-radius: var(--shape-radius, 0);
+  clip-path: var(--shape-clip, none);
+}
+
+.deco-body::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: var(--shape-fill);
+  border-radius: inherit;
+  clip-path: inherit;
+}
+
+/* The squiggle is a stroked path rather than a clip-path — a wave has no
+   polygon. Drawn twice, wide-then-narrow, for the same hard outline the others
+   get from the inset trick. */
+.deco-squiggle {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.deco-squiggle path {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.deco-squiggle path:first-child {
+  stroke: var(--fg);
+  stroke-width: 15;
+}
+
+.deco-squiggle path:last-child {
+  stroke: var(--shape-fill);
+  stroke-width: 9;
+}
+
+/* Phones are too narrow for an "edge" position to stay off the text column, so
+   the set is halved and the survivors shrink. Width and height rather than
+   scale, because `transform` on this element belongs to the parallax. */
+@media (max-width: 639px) {
+  .deco-shape[data-hide-sm] {
+    display: none;
+  }
+
+  .deco-shape {
+    width: calc(var(--size) * 0.62);
+    height: calc(var(--size) * 0.62);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   Cursor glow
+   -----------------------------------------------------------------------------
+   300px of accent, radial, 15% — soft enough to sit under text without ever
+   moving the contrast reading. CursorGlow.tsx writes the transform in a rAF
+   loop and never renders this on a touch device.
+   -------------------------------------------------------------------------- */
+.deco-glow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow) 0%, transparent 68%);
+  opacity: 0;
+  transition: opacity 320ms ease;
+  will-change: transform, opacity;
+}
+
+.deco-glow[data-visible="true"] {
+  opacity: 1;
+}
+
+/* -----------------------------------------------------------------------------
+   Marquee
+   -----------------------------------------------------------------------------
+   A tilted accent band in the page flow, between the hero and the about
+   section: a solid stripe with the words sliding along inside it.
+
+   Three nested elements, and the split is not decoration. A rotated element's
+   bounding box grows with its width — a 3000px-wide band tilted 2 degrees has a
+   105px-tall bounding box, and clipping *that* to the band's own height would
+   slice the text in half. So the band is exactly one viewport wide, the tilt
+   lives on the band, and only the inner track is allowed to be wider than the
+   screen.
+
+   `padding-block` on the wrapper is what stops the tilt from cropping the
+   band. tan(2deg) is 0.0349, which is the vertical rise of a 2-degree tilt
+   across one full viewport width; half of that, per edge, is exactly the room
+   the rotation needs. A fixed rem padding would only be right at one viewport
+   width and would clip the band on anything wider.
+
+   The band is still full-bleed: `overflow: clip` on the wrapper crops its top
+   and bottom corners off the sides of the screen, which is the look.
+   -------------------------------------------------------------------------- */
+.marquee {
+  position: relative;
+  overflow: clip;
+  margin-block: 2.5rem;
+  padding-block: calc(50vw * 0.0349);
+}
+
+.marquee-band {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  /* The text scrolls, the stripe does not. A scrolling background would need
+     the track to be full-bleed too, which is the cropping problem above. */
+  overflow: hidden;
+  rotate: -2deg;
+  background: var(--accent);
+  border-block: 3px solid var(--fg);
+}
+
+/* The band above is the rotated one; `rotate` is a standalone property, and the
+   individual transform properties compose as translate-then-rotate in the
+   parent's space, so the track still slides horizontally. */
+.marquee-track {
+  display: flex;
+  flex: none;
+  width: max-content;
+  animation: marquee-scroll 25s linear infinite;
+  will-change: transform;
+}
+
+/* The track holds two identical runs, so sliding by exactly half of its own
+   width lands the second run where the first started. A single run would have
+   to be guessed at in CSS, where the viewport width is not known. */
+@keyframes marquee-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.marquee-run {
+  padding-block: 0.5rem;
+  padding-inline: 0.5rem;
+  white-space: nowrap;
+  color: var(--accent-ink); /* 5.6:1 on --accent, verified in the README */
+  font-family: var(--display-stack);
+  font-stretch: var(--display-stretch);
+  font-weight: 800;
+  font-size: clamp(1rem, 2.2vw, 1.5rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* -----------------------------------------------------------------------------
+   Pause on hidden tab
+   -----------------------------------------------------------------------------
+   `data-anim-paused` is set on <html> by AnimatedBackground, not on the layer
+   itself, because the marquee is in the page flow rather than inside the layer
+   and both need to stop. `paused` rather than `none`, so a tab that comes back
+   resumes mid-cycle instead of snapping to a keyframe boundary.
+   -------------------------------------------------------------------------- */
+html[data-anim-paused="true"] .bg-anim *,
+html[data-anim-paused="true"] .marquee-track {
+  animation-play-state: paused !important;
+}
+
 
 /* =============================================================================
    8. SCROLL REVEAL
@@ -555,7 +865,331 @@ html.dark {
 }
 
 /* =============================================================================
-   10. REDUCED MOTION — REVEAL AND KEYFRAMES
+   10. NAVBAR
+   -----------------------------------------------------------------------------
+   A full-width sticky bar: logo left, link capsule centre, theme toggle right.
+   Inside the capsule, one accent pill slides between the links to mark the
+   section the reader is in. Below `md` the capsule gives way to a Menu button
+   and a panel that opens underneath the bar.
+
+   Two structural decisions worth stating before the rules.
+
+   **It all sits in `@layer components`.** The Menu button and the panel are
+   hidden with Tailwind's `md:hidden`, and an *unlayered* rule outranks every
+   layered one whatever its specificity. A `display: grid` written on
+   `.nav-panel` outside the layer silently beats `md:hidden` and leaves the panel
+   open in the desktop layout — a bug that looks like a Tailwind problem and is
+   not one.
+
+   **The panel is absolutely positioned, not in flow.** The bar is `position:
+   sticky`, so it occupies real space in the document; a panel in flow would
+   push the entire page down by its own height every time it opened. Taken out of
+   flow it overlays the content instead, which is what a dropdown menu is.
+   Page scrolling is locked while it is open (useLockBodyScroll), so nothing
+   underneath is reachable anyway.
+   ============================================================================= */
+@layer components {
+  /* --- the bar ------------------------------------------------------------- */
+
+  .nav-bar {
+    position: sticky;
+    top: 0;
+    /* Above the page and above the animated background, which is a fixed
+       `z-index: -1` layer and so could never reach here anyway. */
+    z-index: 50;
+    background-color: var(--bg);
+    border-bottom: 3px solid var(--fg);
+
+    /*
+     * Safe area, as padding rather than as `top`.
+     *
+     * The bar is sticky, so `top` is where it *stops* — and a bar stopped below
+     * a notch leaves a strip of scrolling page showing above it. Padding by the
+     * inset instead extends the bar's own background up to the top edge of the
+     * screen and pushes the row clear of the notch: the same offset, by a route
+     * that cannot leak.
+     */
+    padding-top: env(safe-area-inset-top, 0px);
+
+    /* Only the shadow transitions here. The height lives on .nav-inner, because
+       this element's own box has to keep absorbing the safe-area padding. */
+    transition: box-shadow var(--nav-duration) var(--motion-ease);
+  }
+
+  /*
+   * Past the threshold the bar stops being a strip of page and becomes an object
+   * sitting on top of it, so it gets a hard shadow pointing straight down — the
+   * same "6px 6px 0" idea as the cards, flattened to match a horizontal edge.
+   */
+  .nav-bar[data-scrolled="true"] {
+    box-shadow: 0 4px 0 var(--shadow-color);
+  }
+
+  /*
+   * A grid, not a flex row with `space-between`.
+   *
+   * `1fr auto 1fr` centres the capsule on the *page*. `space-between` would
+   * centre it in the leftover gap, which slides sideways the moment the logo
+   * and the toggle stop being the same width — and they never quite are.
+   */
+  .nav-inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 16px;
+    height: var(--nav-h);
+    max-width: var(--nav-max-w);
+    margin-inline: auto;
+    padding-inline: 20px;
+    transition: height var(--nav-duration) var(--motion-ease);
+  }
+
+  .nav-bar[data-scrolled="true"] .nav-inner {
+    height: var(--nav-h-scrolled);
+  }
+
+  .nav-lead {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .nav-logo {
+    display: inline-block;
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    /* Lifts with the theme toggle on the other end, so the two do not look like
+       they belong to different components. */
+    transition: transform 150ms var(--motion-ease);
+  }
+
+  .nav-logo:hover {
+    transform: translate(-2px, -2px);
+  }
+
+  .nav-actions {
+    grid-column: 3;
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* 2px rather than the site-wide 3px: the bar's own 3px bottom border is only a
+     few pixels below the links, and at 3px the ring of a focused link would
+     collide with it. `--focus` is the text colour, so contrast is unchanged. */
+  .nav-bar :focus-visible {
+    outline-offset: 2px;
+  }
+
+  /* --- the menu button (below md) ------------------------------------------ */
+
+  .nav-menu-button {
+    display: inline-flex;
+    align-items: center;
+    /* 44px, matching the theme toggle beside it and clearing WCAG 2.2 SC 2.5.8
+       (24px) with room to spare. Border-box, so the 3px border is inside it. */
+    min-height: 44px;
+    padding-inline: 16px;
+    font-size: 14px;
+    font-weight: 800;
+    background-color: var(--surface);
+    box-shadow: 3px 3px 0 var(--shadow-color);
+    transition:
+      transform 150ms var(--motion-ease),
+      box-shadow 150ms var(--motion-ease);
+  }
+
+  .nav-menu-button:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--shadow-color);
+  }
+
+  /* --- the link capsule ---------------------------------------------------- */
+
+  .nav-capsule {
+    grid-column: 2;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    border: 3px solid var(--fg);
+    border-radius: 999px;
+    background-color: var(--surface);
+  }
+
+  /*
+   * The sliding highlight.
+   *
+   * Its resting box is the capsule's own 4px padding, top and bottom; the hook
+   * writes only `width` and `transform` onto it, and both are composited, so the
+   * whole slide runs without touching layout. `left: 0` is the capsule's padding
+   * edge, which is also where a link's `offsetLeft` is measured from — so the two
+   * agree by construction rather than by arithmetic.
+   */
+  .nav-pill {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 0;
+    z-index: 0;
+    border-radius: 999px;
+    background-color: var(--accent);
+    /* Never intercepts a tap meant for a link, including through the 2px gaps. */
+    pointer-events: none;
+    /* No transition until the hook has measured and placed it — see
+       useSlidingIndicator, and `data-ready` below. */
+    transition-property: none;
+  }
+
+  .nav-capsule[data-ready="true"] .nav-pill {
+    transition-property: width, transform;
+    transition-duration: var(--nav-indicator-duration);
+    transition-timing-function: var(--nav-indicator-ease);
+  }
+
+  .nav-capsule-list {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /*
+   * Above the pill. `z-index` applies to a flex item even while it is `static`, so
+   * `position: relative` here is belt and braces — but it is what a reader would
+   * expect `z-index: 1` to mean, and it keeps the rule correct if the list is
+   * ever re-laid out as something other than a flex container.
+   */
+  .nav-pill-link {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.3;
+    color: var(--fg);
+    border-radius: 999px;
+    white-space: nowrap;
+    transition: color var(--nav-duration) var(--motion-ease);
+  }
+
+  /*
+   * The lit link.
+   *
+   * The brief asks for white here, and white on --accent is 3.13:1 — which fails
+   * AA at 14px and is the one thing in this bar the brief also asked to keep
+   * above 4.5:1. `--accent-ink` is the pairing the rest of the site already uses
+   * for normal text on an accent plate (buttons, ::selection) and clears 5.33:1
+   * in both themes, so the letterform is dark in both rather than swapping.
+   */
+  .nav-pill-link[data-lit] {
+    color: var(--accent-ink);
+  }
+
+  /* --- the mobile panel ---------------------------------------------------- */
+
+  .nav-panel {
+    position: absolute;
+    /* `top: 100%` puts it directly under the bar's 3px border, which then reads
+       as the divider between the bar and the panel. */
+    top: 100%;
+    inset-inline: 0;
+    z-index: 1;
+
+    /*
+     * `0fr` -> `1fr` rather than `height`. A height transition needs a known
+     * content height, and this one is whatever four rows of type and three 3px
+     * borders come to. The row track takes the `fr` the content asks for and
+     * interpolates between 0 and 1 of it without anyone having to measure it.
+     */
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    pointer-events: none;
+    background-color: var(--bg);
+    transition:
+      grid-template-rows var(--nav-menu-duration) var(--motion-ease),
+      opacity var(--nav-menu-duration) var(--motion-ease);
+  }
+
+  .nav-panel[data-open="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    pointer-events: auto;
+    /* Continues the bar's own scrolled shadow, which the panel is sitting on top
+       of and would otherwise interrupt. */
+    box-shadow: 0 4px 0 var(--shadow-color);
+  }
+
+  /*
+   * The row that gets clipped, and the line that is easy to forget: a grid item
+   * defaults to `min-height: auto`, which refuses to shrink below its content.
+   * Without this the `0fr` track stays at full height and the panel never
+   * actually closes — it just goes transparent.
+   *
+   * No padding on this element, deliberately. Padding sits outside the content
+   * box, so a `0fr` track cannot shrink it: 4px + 20px would leave a permanent
+   * 24px strip of panel hanging below the bar. The spacing therefore lives on
+   * .nav-capsule--panel, inside the clipped row, where collapsing to zero takes
+   * it along with everything else.
+   */
+  .nav-panel > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* The panel reuses the capsule component as a vertical list, but without the
+     capsule's frame: the bar's 3px border already separates it from the page, and
+     a second 3px frame inside would read as a box inside a box. */
+  .nav-capsule--panel {
+    display: block;
+    padding: 4px 20px 20px;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+  }
+
+  .nav-capsule--vertical .nav-capsule-list {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  /* Inset on the sides only — the pill tracks the row's width, and `height` is
+     written inline by the hook. */
+  .nav-capsule--vertical .nav-pill {
+    top: 0;
+    bottom: auto;
+    left: 4px;
+    right: 4px;
+  }
+
+  .nav-capsule--vertical .nav-pill-link {
+    display: flex;
+    align-items: center;
+    /* 48px rows: comfortably past the 24px minimum, and past the 44px that the
+       bar's own controls use, because these are the primary tap targets. */
+    min-height: 48px;
+    padding-inline: 12px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+
+  /* 3px dividers, drawn on the list items so the pill passes over them rather
+     than being interrupted by them. */
+  .nav-capsule--vertical .nav-capsule-list > li + li {
+    border-top: 3px solid var(--fg);
+  }
+}
+
+/* =============================================================================
+   11. REDUCED MOTION — REVEAL AND KEYFRAMES
    -----------------------------------------------------------------------------
    Belt and braces alongside the checks in Reveal.tsx and CountUp.tsx. Even if
    JavaScript has not hydrated yet, or the observer never fires, this pins
@@ -579,10 +1213,267 @@ html.dark {
   .btn-bounce:hover {
     animation: none !important;
   }
+
+  /*
+   * The sliding highlight keeps its position — where the reader is in the page is
+   * information, not movement — but arrives without the overshoot. The global
+   * block above already collapses the duration to ~0, which is the part that
+   * matters; this additionally drops the back-and-forth curve, so the pill cannot
+   * be caught travelling past its resting place.
+   */
+  .nav-pill {
+    transition-timing-function: ease !important;
+  }
+
+  /* Background: no drift, no float, no morph, no marquee. `animation: none`
+     rather than the collapsed duration the global block above applies, so each
+     element rests on its authored position instead of on a keyframe's 100%
+     state — which for the grid would be a half-shifted tile pattern. The shapes
+     stay on screen, which is the point: they are texture, not content. */
+  .bg-anim *,
+  .marquee-track {
+    animation: none !important;
+    will-change: auto !important;
+  }
+
+  /* Skeleton loaders hold at their mid-opacity, no pulse. */
+  .skeleton {
+    animation: none !important;
+    opacity: 0.3 !important;
+  }
 }
 
 /* =============================================================================
-   11. PRINT
+   12. LOADING SKELETON
+   -----------------------------------------------------------------------------
+   Pulse animation for the placeholder blocks shown in app/loading.tsx.
+   Disabled with reduced motion, so the skeletons simply hold at their mid-tone.
+   ============================================================================= */
+@layer components {
+  .skeleton {
+    background-color: var(--surface);
+    border: 3px solid var(--fg);
+    animation: skeleton-pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-pulse {
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 0.2;
+    }
+  }
+}
+
+/* =============================================================================
+   13. SPLASH, COMMAND MENU, TOAST
+   -----------------------------------------------------------------------------
+   The three overlays: the loading splash, the Cmd+K palette, and the
+   "Copied!" toast. All three are `position: fixed` with a dimmed backdrop,
+   z-index above the navbar, and a focus trap while open.
+   ============================================================================= */
+@layer components {
+  /* --- splash -------------------------------------------------------------- */
+
+  .splash {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg);
+    transition: transform var(--splash-duration) var(--motion-ease);
+  }
+
+  .splash[data-exiting="true"] {
+    transform: translateY(-100%);
+  }
+
+  .splash-progress {
+    margin-top: 2rem;
+    width: 240px;
+    height: 4px;
+    background-color: var(--surface);
+    border: 3px solid var(--fg);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .splash-progress-bar {
+    height: 100%;
+    background-color: var(--accent);
+    transition: width var(--splash-step-duration) linear;
+  }
+
+  .splash-message {
+    margin-top: 1rem;
+    font-size: 14px;
+    font-weight: 800;
+    opacity: 0.6;
+  }
+
+  /* --- command menu -------------------------------------------------------- */
+
+  .command-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.5);
+    transition: opacity var(--command-duration) var(--motion-ease);
+  }
+
+  .command-backdrop[data-open="false"] {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .command-dialog {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    z-index: 101;
+    transform: translate(-50%, 0);
+    width: calc(100% - 2rem);
+    max-width: 640px;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--surface);
+    border: 3px solid var(--fg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-brutal-lg);
+    transition:
+      opacity var(--command-duration) var(--motion-ease),
+      transform var(--command-duration) var(--motion-ease);
+  }
+
+  .command-dialog[data-open="false"] {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+    pointer-events: none;
+  }
+
+  .command-input {
+    padding: 1rem 1.25rem;
+    border: none;
+    border-bottom: 3px solid var(--fg);
+    background: transparent;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--fg);
+    outline: none;
+  }
+
+  .command-input::placeholder {
+    color: var(--fg);
+    opacity: 0.4;
+  }
+
+  .command-list {
+    flex: 1;
+    overflow-y: auto;
+    max-height: var(--command-list-max-height);
+    padding: 0.5rem;
+  }
+
+  .command-group + .command-group {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 3px solid var(--fg);
+  }
+
+  .command-group-heading {
+    padding: 0.5rem 0.75rem;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.6;
+  }
+
+  .command-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 100ms var(--motion-ease);
+  }
+
+  .command-item:hover,
+  .command-item[data-active="true"] {
+    background-color: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .command-item-hint {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.6;
+  }
+
+  .command-empty {
+    padding: 2rem 1.25rem;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0.5;
+  }
+
+  .command-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
+    border-top: 3px solid var(--fg);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.5;
+  }
+
+  .command-footer-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  /* --- toast --------------------------------------------------------------- */
+
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 110;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--surface);
+    border: 3px solid var(--fg);
+    border-radius: 999px;
+    box-shadow: var(--shadow-brutal);
+    font-size: 14px;
+    font-weight: 800;
+    transition: opacity var(--toast-fade-duration) var(--motion-ease);
+  }
+
+  .toast[data-visible="false"] {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* =============================================================================
+   14. PRINT
    -----------------------------------------------------------------------------
    A reveal only plays when the reader scrolls to it, so at any given moment a
    set of sections is legitimately sitting at opacity 0. Printing the page — or
@@ -601,8 +1492,17 @@ html.dark {
     transform: none !important;
   }
 
-  .bg-decor,
-  header {
+  /* Paper gets the words, not the weather: a fixed backdrop would smear across
+     however many pages the document breaks onto, and the moving strip means
+     nothing once it stops moving. The overlays (splash, command, toast) are
+     transient and never part of the printed document. */
+  .bg-anim,
+  .marquee,
+  header,
+  .splash,
+  .command-backdrop,
+  .command-dialog,
+  .toast {
     display: none !important;
   }
 }

@@ -1,14 +1,16 @@
 import { About } from "@/components/About";
+import { Marquee } from "@/components/background/Marquee";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 import { Hero } from "@/components/Hero";
-import { Navbar } from "@/components/Navbar";
+import { Navbar } from "@/components/layout/Navbar";
 import { Projects } from "@/components/Projects";
 import { Skills } from "@/components/Skills";
 
 /**
  * Single-page portfolio. Every section is a server component; only the theme
- * toggle ships JavaScript, so the page is close to fully static.
+ * toggle, the scroll chrome and the background decoration ship JavaScript, so
+ * the page stays close to fully static.
  */
 export default function HomePage() {
   return (
@@ -24,6 +26,9 @@ export default function HomePage() {
 
       <main id="main">
         <Hero />
+        {/* The scrolling skills strip. Its own margin provides the separation
+            from the hero above and the about section below. */}
+        <Marquee />
         <About />
         <Projects />
         <Skills />

@@ -2,6 +2,7 @@ import { Section } from "@/components/Section";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { trackAttrs } from "@/lib/analytics";
 import { site } from "@/data/site";
 
 /** Centred call to action with the email, LinkedIn and GitHub buttons. */
@@ -22,20 +23,24 @@ export function Contact() {
           </p>
 
           <div className="mt-10 flex flex-wrap justify-center gap-4">
-            {contact.actions.map((action, index) => (
-              <Button
-                key={action.label}
-                href={action.href}
-                external={action.external}
-                ariaLabel={action.ariaLabel}
-                variant={index === 0 ? "primary" : "secondary"}
-                /* Small spring on hover, layered on the existing lift via the
-                   `scale` property so the two do not overwrite each other. */
-                className="btn-bounce"
-              >
-                {action.label}
-              </Button>
-            ))}
+            {contact.actions.map((action, index) => {
+              const method = action.label.toLowerCase();
+              return (
+                <Button
+                  key={action.label}
+                  href={action.href}
+                  external={action.external}
+                  ariaLabel={action.ariaLabel}
+                  variant={index === 0 ? "primary" : "secondary"}
+                  /* Small spring on hover, layered on the existing lift via the
+                     `scale` property so the two do not overwrite each other. */
+                  className="btn-bounce"
+                  {...trackAttrs("contact_click", { method })}
+                >
+                  {action.label}
+                </Button>
+              );
+            })}
           </div>
         </div>
       </Reveal>

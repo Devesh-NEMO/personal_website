@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import type { AnalyticsProvider } from "@/types";
 
 /**
  * =============================================================================
@@ -81,14 +82,132 @@ export const motion = {
 
   /* --- navbar --------------------------------------------------------------- */
 
-  /** Scroll distance, in px, before the navbar condenses. */
+  /** Scroll distance, in px, before the navbar shrinks. */
   navThreshold: 20,
-  /** Condense transition duration, in ms. */
+  /** Height shrink and shadow, in ms. */
   navDuration: 300,
   /** Height of the scroll-progress bar, in px. */
   progressHeight: 4,
-  /** Duration of the active-link underline, in ms. */
-  navLinkDuration: 200,
+  /**
+   * How long the sliding highlight takes to travel between links, in ms.
+   *
+   * Set above the 300ms it is grouped with on purpose: the pill crosses the
+   * whole capsule, and a faster travel reads as a flicker rather than a slide
+   * when the gap is four links wide.
+   */
+  navIndicatorDuration: 300,
+  /**
+   * Easing for the sliding highlight.
+   *
+   * The overshoot past 1 is the point — the pill arrives with a little bounce
+   * instead of easing to a halt, which is what makes it feel like a physical
+   * object being pushed along a track. Overridden to a plain ease in
+   * globals.css under `prefers-reduced-motion`.
+   */
+  navIndicatorEase: "cubic-bezier(0.3, 1.4, 0.5, 1)",
+  /** Mobile panel open/close, in ms. */
+  navMenuDuration: 260,
+
+  /* --- smooth scrolling ------------------------------------------------------ */
+
+  /**
+   * Interpolation intensity for the momentum scroller (0-1). Lower is smoother
+   * and more floaty; higher tracks the wheel more literally. Lenis defaults to
+   * 0.1, which is noticeably laggy on a page this short, so this sits just above
+   * it: clearly smoothed, still responsive.
+   */
+  scrollLerp: 0.12,
+
+  /* --- loading splash ------------------------------------------------------- */
+
+  /**
+   * Hard ceiling on the splash, in ms.
+   *
+   * 1.2s is the longest a first-time visitor should wait on decoration. The
+   * splash never gates anything — the page underneath is already interactive —
+   * so the only thing a longer duration buys is a longer delay before it.
+   */
+  splashMax: 1200,
+  /**
+   * How long the exit slide takes, in ms. Runs *after* `splashMax`, so the total
+   * time on screen is `splashMax + splashDuration`.
+   */
+  splashDuration: 320,
+  /**
+   * The progress bar's discrete values, in %.
+   *
+   * Deliberately not a smooth fill: the joke is a bar that ticks up like a real
+   * job finishing, and an even step every ~120ms is what sells that better than
+   * an easing curve would.
+   */
+  splashSteps: [12, 27, 44, 58, 71, 86, 100],
+  /** How long each step is held, in ms. */
+  splashStepDuration: 130,
+
+  /* --- command menu ---------------------------------------------------------- */
+
+  /** Dialog open/close, in ms. */
+  commandDuration: 180,
+  /** Max height of the scrolling result list, in px. */
+  commandListMaxHeight: 340,
+
+  /* --- toast ----------------------------------------------------------------- */
+
+  /** How long the "Copied!" toast stays up, in ms. */
+  toastDuration: 2000,
+  /** Toast fade in/out, in ms. */
+  toastDurationFade: 160,
+} as const;
+
+/* -----------------------------------------------------------------------------
+ * ANALYTICS
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Analytics runtime configuration.
+ *
+ * Three independent conditions all have to hold before a single event is
+ * reported, and they are checked separately in `lib/analytics.ts`:
+ *
+ *   1. `enabled`   — the `NEXT_PUBLIC_ANALYTICS_ENABLED` switch, for turning
+ *                    tracking off without touching code.
+ *   2. production  — `NODE_ENV === "production"`. A dev server never reports,
+ *                    so tuning the site never fills a dashboard with noise.
+ *   3. a known provider — anything unrecognised falls back to off, so a typo in
+ *                    an environment variable degrades to "no tracking" rather
+ *                    than throwing at import time.
+ *
+ * `NEXT_PUBLIC_*` values are inlined at build time, so changing any of these
+ * needs a rebuild rather than a server restart.
+ */
+export const analytics = {
+  enabled: process.env.NEXT_PUBLIC_ANALYTICS_ENABLED !== "false",
+  provider: (process.env.NEXT_PUBLIC_ANALYTICS_PROVIDER ?? "vercel") as AnalyticsProvider,
+  plausibleDomain: process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN ?? "",
+  plausibleScriptUrl:
+    process.env.NEXT_PUBLIC_PLAUSIBLE_SCRIPT_URL ?? "https://plausible.io/js/script.js",
+} as const;
+
+/* -----------------------------------------------------------------------------
+ * OPEN GRAPH IMAGE
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Social preview card, generated at build time by `app/opengraph-image.tsx`.
+ *
+ * Sized to the Open Graph standard and rendered by Satori (`next/og`), which
+ * supports flexbox and a flat subset of CSS — no grid, no custom fonts unless
+ * they are supplied as buffers. Both restrictions are why the card is built the
+ * way it is; see the README.
+ */
+export const ogImage = {
+  width: 1200,
+  height: 630,
+  contentType: "image/png",
+  /** Same wording as `profile.ogImage.alt`, so the two cannot disagree. */
+  alt: "Devesh Kumar — Data Analyst & Data Scientist. I make data talk.",
+  /** Favicon card. Larger than the 16px it is displayed at, for the same reason. */
+  iconSize: 64,
 } as const;
 
 /* -----------------------------------------------------------------------------
@@ -123,4 +242,17 @@ export const motionCssVars = {
   /* Contact button hover bounce. */
   "--motion-bounce-duration": `${motion.bounceDuration}ms`,
   "--motion-bounce-ease": motion.easeBounce,
+  /* Navbar: height shrink, the sliding highlight and the mobile panel. */
+  "--nav-duration": `${motion.navDuration}ms`,
+  "--nav-indicator-duration": `${motion.navIndicatorDuration}ms`,
+  "--nav-indicator-ease": motion.navIndicatorEase,
+  "--nav-menu-duration": `${motion.navMenuDuration}ms`,
+  /* Loading splash: the exit slide and the stepped progress fill. */
+  "--splash-duration": `${motion.splashDuration}ms`,
+  "--splash-step-duration": `${motion.splashStepDuration}ms`,
+  /* Command menu and toast. */
+  "--command-duration": `${motion.commandDuration}ms`,
+  "--command-list-max-height": `${motion.commandListMaxHeight}px`,
+  "--toast-duration": `${motion.toastDuration}ms`,
+  "--toast-fade-duration": `${motion.toastDurationFade}ms`,
 } as CSSProperties;

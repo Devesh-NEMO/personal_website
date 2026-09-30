@@ -25,7 +25,7 @@ export function About() {
             The reveal is `left`, which adds the slight counter-tilt that
             settles flat — the wrapper carries the transform so the inner
             absolutely-positioned frame is untouched. */}
-        <Reveal direction="left" className="relative size-32 shrink-0 sm:size-40">
+        <Reveal direction="left" className="relative size-48 shrink-0 sm:size-64">
           <div className="brutal-border absolute inset-0 overflow-hidden rounded-[20px] bg-periwinkle shadow-brutal">
             <ProfileImage
               asset={profile.avatar}

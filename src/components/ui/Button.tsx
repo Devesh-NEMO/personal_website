@@ -8,6 +8,7 @@ type ButtonProps = {
   children: ReactNode;
   variant?: "primary" | "secondary";
   className?: string;
+  onClick?: () => void;
 };
 
 /** Visual styling for a single button variant. */
@@ -38,12 +39,13 @@ export function Button({
   href,
   external = false,
   ariaLabel,
-}: ButtonProps & Pick<ActionLink, "href" | "external" | "ariaLabel">) {
+  onClick,
+}: ButtonProps & Partial<Pick<ActionLink, "href" | "external" | "ariaLabel">>) {
   const classes = cn(base, variants[variant], className);
 
   if (!href) {
     return (
-      <button type="button" className={classes} aria-label={ariaLabel}>
+      <button type="button" onClick={onClick} className={classes} aria-label={ariaLabel}>
         {children}
       </button>
     );
