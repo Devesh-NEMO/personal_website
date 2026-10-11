@@ -49,6 +49,9 @@
   --peach: #ffd3b6;
   --periwinkle: #c7ceea;
   --pink: #ffaaa5;
+  /* Signature colour for the hero name. Deep enough to clear WCAG AA on the
+     cream page background (5.7:1), unlike the pastels above. */
+  --violet: #4f46e5;
 
   /* Hard offset shadows — deliberately zero blur */
   --shadow-color: #1b1b1b;
@@ -91,6 +94,8 @@ html.dark {
   --peach: #6e4a32;
   --periwinkle: #3b4270;
   --pink: #703b38;
+  /* Inverted for dark mode: a light indigo reads on near-black (8.8:1). */
+  --violet: #a5b4fc;
 
   /* Pure black reads better than ink on a near-black background */
   --shadow-color: #000000;
@@ -123,6 +128,7 @@ html.dark {
   --color-peach: var(--peach);
   --color-periwinkle: var(--periwinkle);
   --color-pink: var(--pink);
+  --color-violet: var(--violet);
 
   --shadow-brutal: var(--shadow-brutal);
   --shadow-brutal-lg: var(--shadow-brutal-lg);
@@ -169,12 +175,32 @@ html.dark {
    * `font-black` / `font-extrabold` utilities — in charge of weight.
    */
   --display-stretch: 85%;
+
+  /*
+   * The hero name's face. Kept as a plain custom property (not a `--font-*`
+   * theme key) for the same reason as `--display-stack`: the `font-name`
+   * utility is hand-written below, so the face and its `font-stretch` normal
+   * travel together and the serif is never left condensed by the inherited
+   * 85% width meant for Bricolage.
+   *
+   * `--font-name-face` is Playfair Display, published on <html> by next/font;
+   * the serif stack behind it is the fallback if the webfont never arrives.
+   */
+  --name-stack: var(--font-name-face), ui-serif, Georgia, "Times New Roman",
+    serif;
 }
 
 /* Opt an element into the display face: the hero stat figures, mostly. */
 @utility font-display {
   font-family: var(--display-stack);
   font-stretch: var(--display-stretch);
+}
+
+/* Opt an element into the name's serif face. `font-stretch: normal` overrides
+   the condensed width inherited from the surrounding <h1>. */
+@utility font-name {
+  font-family: var(--name-stack);
+  font-stretch: normal;
 }
 
 /* -----------------------------------------------------------------------------
