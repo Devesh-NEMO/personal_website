@@ -44,9 +44,9 @@ export function Hero() {
           >
             <h1 className="max-w-4xl text-4xl leading-[1.05] font-black tracking-[-0.03em] sm:text-5xl md:text-6xl lg:text-7xl">
               {hero.greeting}{" "}
-              {/* The name gets its own serif face and violet colour so it reads
-                  as a signature inside the heading. */}
-              <span className="font-name text-violet">{hero.name}</span>{" "}
+              {/* The name is set in the accent colour so it stands out from
+                  the rest of the heading. */}
+              <span className="text-accent">{hero.name}</span>{" "}
               {hero.preHighlight}{" "}
               {/* Rotated orange-red block, defined in globals.css. */}
               <span className="hero-highlight">{hero.highlight}</span>

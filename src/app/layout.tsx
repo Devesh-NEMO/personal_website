@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Inter, Playfair_Display } from "next/font/google";
+import { Bricolage_Grotesque, Inter } from "next/font/google";
 import Script from "next/script";
 
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
@@ -14,7 +14,7 @@ import { motionCssVars, analytics } from "@/lib/constants";
 import "./globals.css";
 
 /**
- * Three typefaces, kept deliberately different in voice.
+ * Two typefaces, kept deliberately different in voice.
  *
  *  - **Display** (headings, the big stat figures) — Bricolage Grotesque. A
  *    variable grotesque with a slightly narrow, flat-terminaled look that goes
@@ -24,14 +24,12 @@ import "./globals.css";
  *    to be worked around.
  *  - **Body** (paragraphs, labels, buttons, nav) — Inter. Even colour and a tall
  *    x-height, so it stays readable at the 14-18px sizes the copy uses.
- *  - **Name** (the hero name only) — Playfair Display. A high-contrast serif
- *    set once, to give "Devesh Kumar." its own voice inside the heading.
  *
- * `next/font` self-hosts all three: no render-blocking request to Google, and it
+ * `next/font` self-hosts both: no render-blocking request to Google, and it
  * derives a size-adjusted fallback per face so the swap does not shift layout.
- * Each is published as a CSS variable on <html> and read by `--font-sans`,
- * `--display-stack` and `--name-stack` in globals.css, which keep a system
- * stack behind them for the case where the webfont never arrives.
+ * Each is published as a CSS variable on <html> and read by `--font-sans` and
+ * `--font-display` in globals.css, which keep a system stack behind them for
+ * the case where the webfont never arrives.
  */
 const bodyFont = Inter({
   subsets: ["latin"],
@@ -53,18 +51,6 @@ const displayFont = Bricolage_Grotesque({
   display: "swap",
   axes: ["wdth"],
   variable: "--font-heading-face",
-});
-
-// A third face, used for exactly one thing: the name in the hero. A
-// high-contrast serif is the strongest possible foil for the flat-terminaled
-// grotesque around it, so the name reads as a signature rather than as more
-// heading. Published as `--font-name-face` and consumed by `--name-stack` in
-// globals.css, which keeps a serif stack behind it as the fallback.
-const nameFont = Playfair_Display({
-  subsets: ["latin"],
-  display: "swap",
-  weight: ["700", "800"],
-  variable: "--font-name-face",
 });
 
 /**
@@ -151,7 +137,7 @@ export default function RootLayout({
     // hydrates, so the class list intentionally differs from the server HTML.
     <html
       lang="en"
-      className={`${bodyFont.variable} ${displayFont.variable} ${nameFont.variable}`}
+      className={`${bodyFont.variable} ${displayFont.variable}`}
       suppressHydrationWarning
     >
       <head>
