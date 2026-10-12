@@ -4,12 +4,21 @@ import { Section } from "@/components/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { profile } from "@/data/profile";
 import { motion } from "@/lib/constants";
+import type { ProfileImages } from "@/types";
 
 /**
  * Short bio section: profile photo on the left, the bio paragraphs on the
  * right (supplied by the content layer). Stacks vertically on mobile.
  */
-export function About({ paragraphs }: { paragraphs: string[] }) {
+export function About({
+  paragraphs,
+  images,
+}: {
+  paragraphs: string[];
+  images?: ProfileImages;
+}) {
+  const profileImages = images ?? profile;
+
   return (
     <Section id="about">
       <SectionHeading eyebrow="About">A bit about me</SectionHeading>
@@ -25,7 +34,7 @@ export function About({ paragraphs }: { paragraphs: string[] }) {
         <Reveal direction="left" className="relative size-48 shrink-0 sm:size-64">
           <div className="brutal-border absolute inset-0 overflow-hidden rounded-[20px] bg-periwinkle shadow-brutal">
             <ProfileImage
-              asset={profile.avatar}
+              asset={profileImages.avatar}
               sizes="(max-width: 640px) 128px, 160px"
             />
           </div>

@@ -3,6 +3,7 @@
 import { insertMessage } from "@/lib/admin-data";
 import type { ContactState } from "@/lib/form-state";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { sendNotificationEmail } from "@/lib/email";
 import { contactMessageInputSchema, fieldErrors } from "@/lib/schemas";
 
 /**
@@ -47,6 +48,12 @@ export async function submitMessage(
 
   try {
     await insertMessage({
+      name: parsed.data.name,
+      email: parsed.data.email,
+      message: parsed.data.message,
+    });
+    // Send notification email
+    await sendNotificationEmail({
       name: parsed.data.name,
       email: parsed.data.email,
       message: parsed.data.message,

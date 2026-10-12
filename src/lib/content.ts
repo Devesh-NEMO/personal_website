@@ -3,7 +3,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import type { ZodType } from "zod";
 
-import { nav as staticNav } from "@/data/profile";
+import { nav as staticNav, profile as staticProfile } from "@/data/profile";
 import { projects as staticProjects } from "@/data/projects";
 import { skillGroups as staticSkillGroups } from "@/data/skills";
 import { stats as staticStats } from "@/data/stats";
@@ -152,10 +152,11 @@ export async function getSiteContent(): Promise<SiteContent> {
       links: doc.links,
       marquee: doc.marquee,
       nav: doc.nav,
+      images: doc.images,
     });
     if (!parsed.success) return staticSiteContent();
 
-    const { hero, about, contact, links, marquee, nav } = parsed.data;
+    const { hero, about, contact, links, marquee, nav, images } = parsed.data;
     return {
       hero,
       about,
@@ -164,6 +165,14 @@ export async function getSiteContent(): Promise<SiteContent> {
       links,
       marquee,
       nav,
+      images: images
+        ? {
+            avatar: { ...staticProfile.avatar, ...images.avatar },
+            heroImage: { ...staticProfile.heroImage, ...images.heroImage },
+            heroBadge: images.heroBadge ?? staticProfile.heroBadge,
+            ogImage: { ...staticProfile.ogImage, ...(images.ogImage ?? {}) },
+          }
+        : staticProfile,
     };
   } catch {
     return staticSiteContent();
@@ -180,6 +189,7 @@ function staticSiteContent(): SiteContent {
     links: staticSite.links,
     marquee: staticSite.marquee,
     nav: staticNav,
+    images: staticProfile,
   };
 }
 

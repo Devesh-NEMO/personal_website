@@ -8,9 +8,11 @@ import {
   saveHeroAction,
   saveMarqueeAction,
   saveNavAction,
+  saveProfileImagesAction,
 } from "@/app/admin/actions";
 import { Alert } from "@/components/admin/Alert";
 import { Field } from "@/components/admin/Field";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 import { Input } from "@/components/admin/Input";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { TagInput } from "@/components/admin/TagInput";
@@ -20,6 +22,7 @@ import type {
   ContactContent,
   HeroContent,
   MarqueeContent,
+  ProfileImages,
   ProfileNav,
   SiteLinks,
 } from "@/types";
@@ -229,6 +232,73 @@ export function NavForm({ nav }: { nav: ProfileNav }) {
       <Status state={state} />
       <div>
         <SubmitButton pendingLabel="Saving…">Save navigation</SubmitButton>
+      </div>
+    </form>
+  );
+}
+
+export function ProfilePhotosForm({ images }: { images: ProfileImages }) {
+  const [state, formAction] = useActionState<FormState, FormData>(
+    saveProfileImagesAction,
+    idleFormState,
+  );
+  const err = (field: string) => state.fieldErrors?.[field]?.[0];
+
+  return (
+    <form action={formAction} className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Hero Photo Card */}
+        <div className="flex flex-col gap-4">
+          <ImageUploader
+            label="Hero photo (Above-the-fold)"
+            hint="Your main photo shown at the top of the homepage. Select JPG, PNG, WebP, GIF, AVIF or SVG."
+            urlName="heroImageSrc"
+            publicIdName="heroImagePublicId"
+            altName="heroImageAlt"
+            defaultUrl={images.heroImage.src}
+            defaultPublicId={images.heroImage.publicId}
+            defaultAlt={images.heroImage.alt}
+            folder="portfolio/profile"
+            aspect="square"
+            error={err("heroImage")}
+          />
+
+          <Field
+            label="Hero photo sticker badge"
+            htmlFor="profile-hero-badge"
+            hint="The rotated pill pinned to your hero photo (e.g. 'Open to work')."
+            error={err("heroBadge")}
+          >
+            <Input
+              id="profile-hero-badge"
+              name="heroBadge"
+              defaultValue={images.heroBadge}
+              placeholder="Open to work"
+            />
+          </Field>
+        </div>
+
+        {/* About Photo Card */}
+        <div className="flex flex-col gap-4">
+          <ImageUploader
+            label="About photo (Bio section)"
+            hint="Your photo shown in the 'About me' section. Select JPG, PNG, WebP, GIF, AVIF or SVG."
+            urlName="avatarSrc"
+            publicIdName="avatarPublicId"
+            altName="avatarAlt"
+            defaultUrl={images.avatar.src}
+            defaultPublicId={images.avatar.publicId}
+            defaultAlt={images.avatar.alt}
+            folder="portfolio/profile"
+            aspect="square"
+            error={err("avatar")}
+          />
+        </div>
+      </div>
+
+      <Status state={state} />
+      <div>
+        <SubmitButton pendingLabel="Saving photos…">Save profile photos</SubmitButton>
       </div>
     </form>
   );

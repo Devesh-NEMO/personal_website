@@ -105,12 +105,15 @@ unreachable, every page silently falls back to `src/data`.
 All of these are **server-only** (no `NEXT_PUBLIC_` prefix) and must never reach
 the browser. Copy `.env.example` to `.env.local` for local development.
 
-| Variable              | Purpose                                                        |
-| --------------------- | -------------------------------------------------------------- |
-| `MONGODB_URI`         | Atlas connection string, including the database name           |
-| `ADMIN_EMAIL`         | The single admin login address (compared lowercase)            |
-| `ADMIN_PASSWORD_HASH` | bcrypt hash of the admin password                              |
-| `SESSION_SECRET`      | Long random string that signs the session cookie               |
+| Variable                | Purpose                                                        |
+| ----------------------- | -------------------------------------------------------------- |
+| `MONGODB_URI`           | Atlas connection string, including the database name           |
+| `ADMIN_EMAIL`           | The single admin login address (compared lowercase)            |
+| `ADMIN_PASSWORD_HASH`   | bcrypt hash of the admin password                              |
+| `SESSION_SECRET`        | Long random string that signs the session cookie               |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name for admin image uploads (server-only)    |
+| `CLOUDINARY_API_KEY`    | Cloudinary API key for admin image uploads (server-only)       |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret for admin image uploads (server-only)    |
 
 The simplest way to set the admin password is the helper, which hashes your
 password, writes `ADMIN_PASSWORD_HASH` into `.env.local`, and creates
@@ -163,11 +166,23 @@ On Vercel the dashboard does **no** expansion, so use the raw hash there.
 | `projects`    | `_id` = project id | Case studies                             |
 | `skillGroups` | `_id` = group id   | Skill clusters                           |
 | `stats`       | `_id` = stat id    | Hero stat tiles                          |
-| `siteContent` | `_id: "main"`      | Hero, about, contact, links, marquee, nav |
-| `messages`    | ObjectId           | Contact-form submissions                 |
+| `siteContent` | `_id: "main"`      | Hero, about, contact, links, marquee, nav, profile images |
+| `messages`    | ObjectId           | Contact-form submissions                                 |
 
-Only text and URLs are stored — never images. Project thumbnails are still files
-under `public/images/` referenced by path.
+Images (profile face photos, about bio photos, and project thumbnails) are uploaded directly to Cloudinary from the admin panel (supporting JPG, PNG, WebP, GIF, AVIF, SVG up to 5 MB) and referenced via secure Cloudinary URLs and public IDs stored in MongoDB.
+
+### Image uploads (Cloudinary)
+
+1. Create a free account at [cloudinary.com](https://cloudinary.com).
+2. From the Cloudinary dashboard, copy your **Cloud name**, **API Key**, and **API Secret**.
+3. Add them to `.env.local`:
+   ```bash
+   CLOUDINARY_CLOUD_NAME=your_cloud_name
+   CLOUDINARY_API_KEY=your_api_key
+   CLOUDINARY_API_SECRET=your_api_secret
+   ```
+4. In `/admin/profile`, you can upload and replace your **Hero Picture** and **About Bio Picture** to show your own face, with live preview and removal controls.
+5. In `/admin/projects`, each case study supports thumbnail uploads with preview, alt text, replace, and remove controls.
 
 ### Auth notes
 

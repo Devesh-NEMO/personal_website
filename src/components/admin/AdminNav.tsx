@@ -18,7 +18,7 @@ const links = [
  * The admin section switcher. Client-side only so the current section can be
  * highlighted; the links themselves are plain navigations.
  */
-export function AdminNav() {
+export function AdminNav({ unreadCount = 0 }: { unreadCount?: number }) {
   const pathname = usePathname();
 
   return (
@@ -30,13 +30,13 @@ export function AdminNav() {
             key={link.href}
             href={link.href}
             aria-current={active ? "page" : undefined}
-            className={cn(
+            className={cn("relative", 
               "brutal-pill brutal-border px-3.5 py-1.5 text-sm font-extrabold tracking-tight",
               "transition-colors duration-150",
               active ? "bg-accent text-accent-ink" : "bg-surface hover:bg-peach",
             )}
           >
-            {link.label}
+            {link.label}{link.href === "/admin/messages" && unreadCount > 0 ? ( <span className="absolute -top-1 -right-1 size-2.5 rounded-full bg-accent" /> ) : null}
           </Link>
         );
       })}

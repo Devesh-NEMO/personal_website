@@ -17,6 +17,7 @@ import {
   saveProject,
   saveSkillGroup,
   saveStat,
+  saveProfileImages,
   setMessageRead,
 } from "@/lib/admin-data";
 import { createSession, destroySession, verifyCredentials } from "@/lib/auth";
@@ -35,7 +36,7 @@ import {
   skillGroupSchema,
   statSchema,
 } from "@/lib/schemas";
-import type { Project, SkillGroup, Stat } from "@/types";
+import type { ProfileImages, Project, SkillGroup, Stat } from "@/types";
 
 /**
  * Server actions for the admin area.
@@ -124,6 +125,7 @@ export async function saveProjectAction(
     tone: formData.get("tone"),
     image: emptyToUndefined(formData.get("image")),
     imageAlt: emptyToUndefined(formData.get("imageAlt")),
+    imagePublicId: emptyToUndefined(formData.get("imagePublicId")),
   });
 
   if (!parsed.success) {
@@ -359,6 +361,74 @@ export async function saveNavAction(
 
   refreshPublicContent(contentTags.site);
   return { status: "success", message: "Navigation saved." };
+}
+
+export async function saveProfileImagesAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const heroImageSrc = String(formData.get("heroImageSrc") || "").trim();
+  const heroImageAlt = String(formData.get("heroImageAlt") || "").trim();
+  const heroImagePublicId = emptyToUndefined(formData.get("heroImagePublicId"));
+  const heroBadge = String(formData.get("heroBadge") || "Open to work").trim();
+
+  const avatarSrc = String(formData.get("avatarSrc") || "").trim();
+  const avatarAlt = String(formData.get("avatarAlt") || "").trim();
+  const avatarPublicId = emptyToUndefined(formData.get("avatarPublicId"));
+
+  if (!heroImageSrc) {
+    return {
+      status: "error",
+      message: "Hero image is required. Please choose or upload a photo.",
+      fieldErrors: { heroImage: ["Hero image is required"] },
+    };
+  }
+
+  if (!avatarSrc) {
+    return {
+      status: "error",
+      message: "About section photo is required. Please choose or upload a photo.",
+      fieldErrors: { avatar: ["About section photo is required"] },
+    };
+  }
+
+  const images: ProfileImages = {
+    heroImage: {
+      src: heroImageSrc,
+      alt: heroImageAlt || "Devesh Kumar profile photo",
+      width: 600,
+      height: 600,
+      tone: "mint",
+      fallback: "DK",
+      publicId: heroImagePublicId,
+    },
+    heroBadge: heroBadge || "Open to work",
+    avatar: {
+      src: avatarSrc,
+      alt: avatarAlt || "Devesh Kumar about photo",
+      width: 800,
+      height: 800,
+      tone: "periwinkle",
+      fallback: "DK",
+      publicId: avatarPublicId,
+    },
+    ogImage: {
+      src: heroImageSrc,
+      alt: heroImageAlt || "Devesh Kumar",
+      width: 1200,
+      height: 630,
+      publicId: heroImagePublicId,
+    },
+  };
+
+  try {
+    await saveProfileImages(images);
+  } catch (error) {
+    return { status: "error", message: toMessage(error) };
+  }
+
+  refreshPublicContent(contentTags.site);
+  return { status: "success", message: "Profile photos saved successfully." };
 }
 
 /* --- messages ---------------------------------------------------------------- */

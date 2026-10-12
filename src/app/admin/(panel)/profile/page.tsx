@@ -4,6 +4,7 @@ import {
   HeroForm,
   MarqueeForm,
   NavForm,
+  ProfilePhotosForm,
 } from "@/components/admin/ProfileForms";
 import { getSiteContent } from "@/lib/content";
 
@@ -27,6 +28,13 @@ export default async function ProfileAdminPage() {
           The hero, bio, contact section and site chrome.
         </p>
       </header>
+
+      <Section
+        title="Profile Photos"
+        description="Upload or change your face picture for the hero section and about section. Supports JPG, PNG, WebP, GIF, AVIF, and SVG."
+      >
+        <ProfilePhotosForm images={content.images} />
+      </Section>
 
       <Section title="Hero" description="The first thing visitors see.">
         <HeroForm hero={content.hero} />

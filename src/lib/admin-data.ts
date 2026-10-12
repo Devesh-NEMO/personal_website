@@ -8,6 +8,7 @@ import type {
   ContactMessage,
   HeroContent,
   MarqueeContent,
+  ProfileImages,
   ProfileNav,
   Project,
   SiteLinks,
@@ -203,6 +204,10 @@ export async function saveNav(nav: ProfileNav): Promise<void> {
   await updateSiteContent({ nav });
 }
 
+export async function saveProfileImages(images: ProfileImages): Promise<void> {
+  await updateSiteContent({ images });
+}
+
 /* --- messages ---------------------------------------------------------------- */
 
 /** A message as the admin list needs it: string id, ready for `key`/forms. */
@@ -299,4 +304,11 @@ function toObjectId(id: string): ObjectId {
     throw new Error("Invalid message id");
   }
   return new ObjectId(id);
+}
+
+
+export async function getUnreadCount(): Promise<number> {
+  await requireAdmin();
+  const db = await requireDb();
+  return await db.collection("messages").countDocuments({ read: false });
 }

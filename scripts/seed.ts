@@ -10,7 +10,7 @@
  */
 
 import { connectToDatabase, disconnect } from "../src/lib/mongodb";
-import { nav } from "../src/data/profile";
+import { nav, profile } from "../src/data/profile";
 import { projects } from "../src/data/projects";
 import { skillGroups } from "../src/data/skills";
 import { stats } from "../src/data/stats";
@@ -104,6 +104,7 @@ async function main() {
         links: site.links,
         marquee: site.marquee,
         nav,
+        images: profile,
         updatedAt: now,
       },
       $setOnInsert: { _id: "main", createdAt: now },
@@ -111,7 +112,7 @@ async function main() {
     { upsert: true },
   );
   summary.push(
-    `siteContent: ${siteResult.upsertedCount ? "created" : "updated"} (hero, about, contact, links, marquee, nav)`,
+    `siteContent: ${siteResult.upsertedCount ? "created" : "updated"} (hero, about, contact, links, marquee, nav, images)`,
   );
 
   // Messages are only ever created by the contact form, so there is nothing

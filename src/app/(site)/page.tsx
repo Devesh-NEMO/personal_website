@@ -43,11 +43,11 @@ export default async function HomePage() {
       <Navbar profile={siteContent.nav} />
 
       <main id="main">
-        <Hero hero={siteContent.hero} stats={stats} />
+        <Hero hero={siteContent.hero} stats={stats} images={siteContent.images} />
         {/* The scrolling skills strip. Its own margin provides the separation
             from the hero above and the about section below. */}
         <Marquee marquee={siteContent.marquee} />
-        <About paragraphs={siteContent.about.paragraphs} />
+        <About paragraphs={siteContent.about.paragraphs} images={siteContent.images} />
         <Projects projects={projects} />
         <Skills groups={skillGroups} />
         <Contact contact={siteContent.contact} />

@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { logout } from "@/app/admin/actions";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { getUnreadCount } from "@/lib/admin-data";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { requireAdmin } from "@/lib/auth";
@@ -41,6 +42,7 @@ export default async function AdminPanelLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   await requireAdmin();
+  const unreadCount = await getUnreadCount();
 
   return (
     <div className="min-h-dvh">
@@ -59,7 +61,7 @@ export default async function AdminPanelLayout({
               </form>
             </div>
           </div>
-          <AdminNav />
+          <AdminNav unreadCount={unreadCount} />
         </div>
       </header>
 

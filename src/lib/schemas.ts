@@ -84,6 +84,31 @@ export const navSchema = z.object({
   menuCloseLabel: z.string().trim().max(30),
 });
 
+export const imageAssetSchema = z.object({
+  src: z.string().trim().min(1, "Image URL or path is required").max(1000),
+  alt: z.string().trim().max(300).default(""),
+  width: z.number().int().positive().default(600),
+  height: z.number().int().positive().default(600),
+  tone: cardToneSchema.default("mint"),
+  fallback: z.string().trim().max(20).default("DK"),
+  publicId: z.string().trim().max(300).optional(),
+});
+
+export const profileImagesSchema = z.object({
+  avatar: imageAssetSchema,
+  heroImage: imageAssetSchema,
+  heroBadge: z.string().trim().max(60).default("Open to work"),
+  ogImage: z
+    .object({
+      src: z.string().trim().min(1).max(1000),
+      alt: z.string().trim().max(300).default(""),
+      width: z.number().int().positive().default(1200),
+      height: z.number().int().positive().default(630),
+      publicId: z.string().trim().max(300).optional(),
+    })
+    .optional(),
+});
+
 /**
  * Shape of the single `siteContent` document in MongoDB.
  */
@@ -94,6 +119,7 @@ export const siteContentDocSchema = z.object({
   links: siteLinksSchema,
   marquee: marqueeContentSchema,
   nav: navSchema,
+  images: profileImagesSchema.optional(),
 });
 
 export const projectSchema = z.object({
@@ -117,8 +143,9 @@ export const projectSchema = z.object({
   tags: z.array(z.string().trim().max(40)).max(20),
   href: z.string().trim().max(500),
   tone: cardToneSchema,
-  image: z.string().trim().max(500).optional(),
+  image: z.string().trim().max(1000).optional(),
   imageAlt: z.string().trim().max(300).optional(),
+  imagePublicId: z.string().trim().max(300).optional(),
   /** Not part of the public Project type — sorting order for the grid/admin. */
   order: z.number().int().min(0).optional(),
 });

@@ -7,6 +7,14 @@ const nextConfig = {
    * admin writes revalidate the matching tags on demand — no rebuild needed.
    */
   cacheComponents: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

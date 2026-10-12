@@ -12,13 +12,16 @@
     "reset-password": "node scripts/reset-password.mjs"
   },
   "dependencies": {
+    "@types/nodemailer": "^8.0.2",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.11.0",
     "jose": "^6.2.12",
     "lenis": "^1.3.26",
     "mongodb": "^7.7.0",
     "next": "16.3.7",
+    "nodemailer": "^10.1.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "^0.0.1",

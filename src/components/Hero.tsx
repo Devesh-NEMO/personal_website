@@ -5,7 +5,7 @@ import { Section } from "@/components/Section";
 import { StatTile } from "@/components/ui/StatTile";
 import { profile } from "@/data/profile";
 import { motion } from "@/lib/constants";
-import type { HeroContent, Stat } from "@/types";
+import type { HeroContent, ProfileImages, Stat } from "@/types";
 
 /**
  * Above-the-fold hero: name, positioning line, two calls to action and the
@@ -16,7 +16,17 @@ import type { HeroContent, Stat } from "@/types";
  * screen, so its reveal sequence plays on load against a fixed timeline in
  * `motion.hero` rather than against scroll position.
  */
-export function Hero({ hero, stats }: { hero: HeroContent; stats: Stat[] }) {
+export function Hero({
+  hero,
+  stats,
+  images,
+}: {
+  hero: HeroContent;
+  stats: Stat[];
+  images?: ProfileImages;
+}) {
+  const profileImages = images ?? profile;
+
   return (
     <Section id="top" className="pt-8 sm:pt-24">
       {/* Text and photo sit side by side from lg, photo stacks below on mobile.
@@ -78,7 +88,7 @@ export function Hero({ hero, stats }: { hero: HeroContent; stats: Stat[] }) {
             <div className="absolute inset-0 rotate-2 overflow-hidden rounded-[20px] border-[3px] border-fg bg-mint shadow-brutal">
               {/* Above the fold, so it is preloaded rather than lazy-loaded. */}
               <ProfileImage
-                asset={profile.heroImage}
+                asset={profileImages.heroImage}
                 sizes="(max-width: 640px) 176px, (max-width: 1024px) 224px, 256px"
                 preload
               />
@@ -88,7 +98,7 @@ export function Hero({ hero, stats }: { hero: HeroContent; stats: Stat[] }) {
                 Nudged inward on mobile: at -left-4 it hung only 3px from the
                 viewport edge once the photo shrank to size-40. */}
             <span className="brutal-pill brutal-border absolute -bottom-4 -left-2 z-10 rotate-[-3deg] bg-accent px-3 py-1.5 text-xs font-extrabold text-accent-ink shadow-brutal sm:-left-4 sm:text-sm">
-              {profile.heroBadge}
+              {profileImages.heroBadge}
             </span>
           </div>
         </Reveal>

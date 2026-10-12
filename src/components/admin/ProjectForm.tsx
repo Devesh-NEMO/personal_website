@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { saveProjectAction } from "@/app/admin/actions";
 import { Alert } from "@/components/admin/Alert";
 import { Field } from "@/components/admin/Field";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 import { Input } from "@/components/admin/Input";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { TagInput } from "@/components/admin/TagInput";
@@ -83,18 +84,19 @@ export function ProjectForm({ project }: { project?: Project }) {
         </Field>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <Field
-          label="Image path"
-          htmlFor="project-image"
-          hint="Optional, e.g. /images/projects/foo.png. Leave empty for no thumbnail."
-        >
-          <Input id="project-image" name="image" defaultValue={project?.image} />
-        </Field>
-        <Field label="Image alt" htmlFor="project-image-alt">
-          <Input id="project-image-alt" name="imageAlt" defaultValue={project?.imageAlt} />
-        </Field>
-      </div>
+      <ImageUploader
+        label="Project thumbnail"
+        hint="Optional 16:9 thumbnail for the card. Select any format: JPG, PNG, WebP, GIF, AVIF or SVG."
+        urlName="image"
+        publicIdName="imagePublicId"
+        altName="imageAlt"
+        defaultUrl={project?.image}
+        defaultPublicId={project?.imagePublicId}
+        defaultAlt={project?.imageAlt ?? project?.title}
+        folder="portfolio/projects"
+        aspect="video"
+        error={err("image")}
+      />
 
       {state.status !== "idle" && state.message ? (
         <Alert tone={state.status === "success" ? "success" : "error"}>{state.message}</Alert>

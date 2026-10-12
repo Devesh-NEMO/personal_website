@@ -160,6 +160,8 @@ export type Project = {
   image?: string;
   /** Describes what the thumbnail shows. Falls back to the project title. */
   imageAlt?: string;
+  /** Cloudinary public identifier for asset management. */
+  imagePublicId?: string;
 };
 
 /**
@@ -176,6 +178,8 @@ export type ImageAsset = {
   tone: CardTone;
   /** Rendered in place of the image if it 404s or fails to decode. */
   fallback: string;
+  /** Cloudinary public identifier for asset management. */
+  publicId?: string;
 };
 
 /** Every image on the site, in one typed file. */
@@ -189,6 +193,7 @@ export type ProfileImages = {
     alt: string;
     width: number;
     height: number;
+    publicId?: string;
   };
 };
 
@@ -252,6 +257,7 @@ export type SiteContent = {
   links: SiteLinks;
   marquee: MarqueeContent;
   nav: ProfileNav;
+  images: ProfileImages;
 };
 
 /** A message sent through the contact form, stored in the `messages` collection. */
