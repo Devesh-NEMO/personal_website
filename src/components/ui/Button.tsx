@@ -9,6 +9,12 @@ type ButtonProps = {
   variant?: "primary" | "secondary";
   className?: string;
   onClick?: () => void;
+  /** Native type when this renders as a <button> (e.g. "submit" in a form). */
+  type?: "button" | "submit" | "reset";
+  /** Disables the button, for form submits that are in flight. */
+  disabled?: boolean;
+  /** Focuses the button on mount (e.g. a dialog's default action). */
+  autoFocus?: boolean;
 };
 
 /** Visual styling for a single button variant. */
@@ -40,12 +46,28 @@ export function Button({
   external = false,
   ariaLabel,
   onClick,
+  type = "button",
+  disabled = false,
+  autoFocus = false,
 }: ButtonProps & Partial<Pick<ActionLink, "href" | "external" | "ariaLabel">>) {
-  const classes = cn(base, variants[variant], className);
+  const classes = cn(
+    base,
+    variants[variant],
+    disabled &&
+      "cursor-not-allowed opacity-60 shadow-none hover:translate-x-0 hover:translate-y-0 hover:shadow-none",
+    className,
+  );
 
   if (!href) {
     return (
-      <button type="button" onClick={onClick} className={classes} aria-label={ariaLabel}>
+      <button
+        type={type}
+        onClick={onClick}
+        disabled={disabled}
+        autoFocus={autoFocus}
+        className={classes}
+        aria-label={ariaLabel}
+      >
         {children}
       </button>
     );

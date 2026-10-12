@@ -4,22 +4,19 @@ import { Reveal } from "@/components/ui/Reveal";
 import { Section } from "@/components/Section";
 import { StatTile } from "@/components/ui/StatTile";
 import { profile } from "@/data/profile";
-import { site } from "@/data/site";
-import { stats } from "@/data/stats";
 import { motion } from "@/lib/constants";
+import type { HeroContent, Stat } from "@/types";
 
 /**
  * Above-the-fold hero: name, positioning line, two calls to action and the
- * stat tiles. The heading is assembled from the data file so the highlighted
- * word can be swapped without touching markup.
+ * stat tiles. The heading is assembled from the content layer so the
+ * highlighted word can be swapped without touching markup.
  *
  * The hero is the one place that does not wait for a scroll: it is already on
  * screen, so its reveal sequence plays on load against a fixed timeline in
  * `motion.hero` rather than against scroll position.
  */
-export function Hero() {
-  const { hero } = site;
-
+export function Hero({ hero, stats }: { hero: HeroContent; stats: Stat[] }) {
   return (
     <Section id="top" className="pt-8 sm:pt-24">
       {/* Text and photo sit side by side from lg, photo stacks below on mobile.

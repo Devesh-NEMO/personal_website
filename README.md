@@ -2,22 +2,26 @@
 
 A single-page portfolio built with **Next.js 16 (App Router)**, **TypeScript** and **Tailwind CSS v4**, in a bold neo-brutalist style: 3px borders, hard offset shadows with zero blur, and a cream / orange-red / pastel palette. Dark mode follows the OS by default and has a manual toggle.
 
-All content lives in typed files under `src/data` — nothing is hardcoded in a component.
+All content lives in typed files under `src/data` — nothing is hardcoded in a component. Those files are also the **fallback**: content can be edited at runtime through a password-protected admin panel, stored in MongoDB, and the public site falls back to `src/data` whenever the database is unreachable or empty. See [Admin panel & database](#admin-panel--database).
 
 ## Getting started
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000
+cp .env.example .env.local   # fill in the values
+npm run dev                  # http://localhost:3000
 ```
 
-| Script            | Purpose                              |
-| ----------------- | ------------------------------------ |
-| `npm run dev`     | Dev server with hot reload           |
-| `npm run build`   | Production build (fully static)       |
-| `npm run start`   | Serve the production build           |
-| `npm run lint`    | ESLint                               |
-| `npx tsc --noEmit`| Type check                           |
+| Script                     | Purpose                              |
+| -------------------------- | ------------------------------------ |
+| `npm run dev`              | Dev server with hot reload           |
+| `npm run build`            | Production build                     |
+| `npm run start`            | Serve the production build           |
+| `npm run lint`             | ESLint                               |
+| `npx tsc --noEmit`         | Type check                           |
+| `npm run seed`             | Copy `src/data/*` into MongoDB       |
+| `npm run hash-password`    | Print a bcrypt hash for the admin password |
+| `npm run reset-password`   | Set/reset the admin password in `.env.local` |
 
 ## Adding your images
 
@@ -54,7 +58,8 @@ The paths themselves are in `src/data/profile.ts` and `src/data/projects.ts`.
 
 ## Making it yours
 
-Everything editable is a data file, typed against `src/types/index.ts`:
+Everything editable is a data file, typed against `src/types/index.ts`. They seed
+the database (`npm run seed`) and remain the fallback when it is unavailable:
 
 | File                     | Contents                                              |
 | ------------------------ | ----------------------------------------------------- |
@@ -71,6 +76,113 @@ Set your deployment origin so the sitemap, `robots.txt` and OG URLs are correct:
 # .env.local
 NEXT_PUBLIC_SITE_URL=https://your-domain.com
 ```
+
+## Admin panel & database
+
+The site ships with a password-protected admin panel at `/admin`, backed by
+MongoDB (Atlas) and a small set of server-only dependencies. Nothing here is
+required to *view* the site — if `MONGODB_URI` is unset or the database is
+unreachable, every page silently falls back to `src/data`.
+
+### How it fits together
+
+- **Data layer** (`src/lib/content.ts`) — every read goes through cached
+  getters (`getProjects`, `getSiteContent`, …). Each one validates what Mongo
+  returns and falls back to `src/data` on a miss or a bad document, so a
+  malformed row can never break a render. Reads are tagged (`contentTags`) and
+  cached with `cacheLife`.
+- **Writes** (`src/lib/admin-data.ts`) — every mutation calls `requireAdmin()`
+  *next to the write*, so a forged request cannot bypass the check even if a
+  page or action is misconfigured.
+- **Revalidation** — server actions (`src/app/admin/actions.ts`) call
+  `updateTag(...)` + `revalidatePath("/")` after a save, so the public page
+  updates on demand with no rebuild.
+- **Contact form** — the only public write. It adds to the `messages`
+  collection, is rate-limited per IP, honeypot-protected and zod-validated.
+
+### Environment variables
+
+All of these are **server-only** (no `NEXT_PUBLIC_` prefix) and must never reach
+the browser. Copy `.env.example` to `.env.local` for local development.
+
+| Variable              | Purpose                                                        |
+| --------------------- | -------------------------------------------------------------- |
+| `MONGODB_URI`         | Atlas connection string, including the database name           |
+| `ADMIN_EMAIL`         | The single admin login address (compared lowercase)            |
+| `ADMIN_PASSWORD_HASH` | bcrypt hash of the admin password                              |
+| `SESSION_SECRET`      | Long random string that signs the session cookie               |
+
+The simplest way to set the admin password is the helper, which hashes your
+password, writes `ADMIN_PASSWORD_HASH` into `.env.local`, and creates
+`SESSION_SECRET` if it is missing:
+
+```bash
+npm run reset-password          # prompts twice, then writes .env.local
+```
+
+<details>
+<summary>Doing it by hand</summary>
+
+```bash
+npm run hash-password           # prompts for a password, prints the bcrypt hash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+```
+
+Paste the printed **escaped** hash (with `\$`) as `ADMIN_PASSWORD_HASH`. Next.js
+expands `$NAME` in `.env` files, so a raw `$2b$12$…` hash is silently corrupted
+(the `$2b`/`$12` segments get treated as variables). `npm run hash-password`
+already escapes it for you; the minute you paste the raw value by hand it breaks.
+On Vercel the dashboard does **no** expansion, so use the raw hash there.
+
+</details>
+
+### Setting up MongoDB Atlas
+
+1. Create a free cluster at [cloud.mongodb.com](https://cloud.mongodb.com).
+2. **Database Access** → add a user with read/write on the database.
+3. **Network Access** → allow your IP. Add `0.0.0.0/0` for Vercel, since its
+   functions use dynamic egress IPs.
+4. Copy the driver connection string and set it as `MONGODB_URI`, including a
+   database name, e.g.
+   `mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/website?retryWrites=true&w=majority`.
+5. Seed the initial content and sign in:
+
+   ```bash
+   npm run seed            # writes src/data/* into the collections
+   npm run reset-password  # sets ADMIN_PASSWORD_HASH (skip if already set)
+   npm run dev             # then visit http://localhost:3000/admin
+   ```
+
+   Log in with `ADMIN_EMAIL` and the password you chose. `.env` changes only
+   apply after the dev server restarts, so restart it after editing them.
+
+### Collections
+
+| Collection    | Key                | Holds                                    |
+| ------------- | ------------------ | ---------------------------------------- |
+| `projects`    | `_id` = project id | Case studies                             |
+| `skillGroups` | `_id` = group id   | Skill clusters                           |
+| `stats`       | `_id` = stat id    | Hero stat tiles                          |
+| `siteContent` | `_id: "main"`      | Hero, about, contact, links, marquee, nav |
+| `messages`    | ObjectId           | Contact-form submissions                 |
+
+Only text and URLs are stored — never images. Project thumbnails are still files
+under `public/images/` referenced by path.
+
+### Auth notes
+
+- A single admin from env; the session is a signed HS256 JWT (`jose`) in an
+  `httpOnly`, `sameSite=strict`, `secure`-in-production cookie.
+- Login is rate-limited per IP and always returns the same
+  `Invalid email or password` message; the email comparison is constant-time and
+  bcrypt runs even when the email is wrong.
+- `/admin` is `noindex`, excluded from `sitemap.ts` and disallowed in
+  `robots.ts`; `src/proxy.ts` also sends `X-Robots-Tag: noindex` and bounces
+  cookie-less visitors to `/admin/login`.
+- Rotating `SESSION_SECRET` invalidates every existing session.
+- Locked out? `npm run reset-password` re-hashes a new password into
+  `.env.local` from outside the app (then restart the dev server, or update the
+  variable in Vercel and redeploy).
 
 ## Design system
 
@@ -468,38 +580,58 @@ src/
 ├── app/
 │   ├── globals.css        # design tokens, dark mode, type pairing, background keyframes
 │   ├── layout.tsx         # metadata, OG tags, fonts, pre-paint theme script
-│   ├── page.tsx           # single page, section order
-│   ├── sitemap.ts         # /sitemap.xml
-│   ├── robots.ts          # /robots.txt
+│   ├── (site)/            # public chrome: page.tsx (single page), layout, contact action
+│   ├── admin/             # admin panel: login, actions.ts, and (panel)/ group
+│   │   └── (panel)/       #   guarded shell + dashboard, projects, skills, stats,
+│   │                      #   profile, messages
+│   ├── sitemap.ts         # /sitemap.xml (public routes only)
+│   ├── robots.ts          # /robots.txt (disallows /admin)
 │   └── icon.svg           # favicon
 ├── components/
 │   ├── background/        # AnimatedBackground, FloatingShapes, CursorGlow, Marquee
 │   ├── ui/                # Button, Card, CountUp, Reveal, SectionHeading, StatTile, Tag
 │   ├── layout/            # Navbar, NavShell, NavLinks, MobileMenu,
 │   │                      #   ScrollProgress, SmoothScroll
-│   ├── About, Contact, Footer, Hero, Projects, Section, Skills
+│   ├── admin/             # admin form kit + per-section forms
+│   ├── About, Contact, ContactForm, Footer, Hero, Projects, Section, Skills
 │   ├── ProfileImage.tsx   # next/image with initials fallback
 │   └── ThemeToggle.tsx    # dark mode toggle
-├── data/                  # all content (see table above) + shapes.ts
+├── data/                  # content seed + fallback (see table above) + shapes.ts
 ├── hooks/                 # useInView, useActiveSection, useParallax, usePageVisible,
 │                          #   usePrefersReducedMotion, useScrolled,
 │                          #   useSlidingIndicator, useLockBodyScroll
-├── lib/                   # cn(), constants.ts (motion), tone map, blur placeholders
+├── lib/                   # cn(), constants.ts (motion), tone map, blur placeholders,
+│                          #   content.ts (cached reads), admin-data.ts (guarded
+│                          #   writes), mongodb.ts, auth.ts, schemas.ts, rate-limit.ts
+├── proxy.ts               # /admin redirect + noindex header (Next 16 rename of middleware)
 └── types/                 # shared TypeScript types
 ```
 
-The section components, `Navbar`, `Marquee` and every data file are
-server-rendered and fully static. Only the animated leaves, the theme toggle, the
-background layer and the smooth-scroll harness ship JavaScript.
+The public section components, `Navbar`, `Marquee` and every data file are
+server-rendered; with Cache Components the home page is a cached, partially
+prerendered route that is revalidated on demand when the admin saves. Only the
+animated leaves, the theme toggle, the background layer, the contact form and
+the smooth-scroll harness ship JavaScript. The admin pages ship their own
+client forms; the guarded shell and all data access stay on the server.
 
 ## Deploying to Vercel
 
 1. Push the repo to GitHub, then import it at [vercel.com/new](https://vercel.com/new).
    Vercel detects Next.js and needs no build settings.
-2. Add `NEXT_PUBLIC_SITE_URL` under **Project → Settings → Environment
-   Variables**, set to your production domain.
-3. Deploy. Every route prerenders as static content, so the site is served from
-   the CDN with no server cost.
+2. Add the environment variables under **Project → Settings → Environment
+   Variables**: `NEXT_PUBLIC_SITE_URL`, `MONGODB_URI`, `ADMIN_EMAIL`,
+   `ADMIN_PASSWORD_HASH` and `SESSION_SECRET`. Add the first three for the
+   build/preview environments too. Paste `ADMIN_PASSWORD_HASH` **raw** here
+   (no `\$` escapes) — the escaping above is only for `.env` files.
+3. Make sure your Atlas cluster allows `0.0.0.0/0` (or Vercel's egress IPs) —
+   otherwise the build cannot read content and the site will fall back to
+   `src/data`.
+4. Deploy, then run `npm run seed` once against the production `MONGODB_URI`
+   (from your machine, with Atlas network access) to populate the database.
+5. Visit `/admin` and sign in with `ADMIN_EMAIL` + your password.
+
+If `MONGODB_URI` is missing at build time the site still builds and deploys — it
+just serves the `src/data` fallback everywhere.
 
 For any other host, `npm run build` emits a self-contained `.next` directory to
 serve with `npm run start` or any Node host.

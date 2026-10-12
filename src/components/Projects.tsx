@@ -5,18 +5,18 @@ import { Card } from "@/components/ui/Card";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Tag } from "@/components/ui/Tag";
-import { projects } from "@/data/projects";
 import { trackAttrs } from "@/lib/analytics";
 import { motion } from "@/lib/constants";
 import { toneOrder } from "@/lib/tone";
+import type { Project } from "@/types";
 
 /**
  * Case study grid. One column on mobile, two from `sm`, three from `lg`.
  *
- * The card tone is taken from the data file when set, otherwise the palette
- * cycles mint → peach → periwinkle → pink down the grid.
+ * The cards come from the content layer. The tone is used when set, otherwise
+ * the palette cycles mint → peach → periwinkle → pink down the grid.
  */
-export function Projects() {
+export function Projects({ projects }: { projects: Project[] }) {
   return (
     <Section id="work">
       <SectionHeading eyebrow="Work">Selected projects</SectionHeading>

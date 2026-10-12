@@ -3,16 +3,13 @@ import { Reveal } from "@/components/ui/Reveal";
 import { Section } from "@/components/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { profile } from "@/data/profile";
-import { site } from "@/data/site";
 import { motion } from "@/lib/constants";
 
 /**
- * Short bio section: profile photo on the left, two paragraphs of copy on the
- * right. Stacks vertically on mobile.
+ * Short bio section: profile photo on the left, the bio paragraphs on the
+ * right (supplied by the content layer). Stacks vertically on mobile.
  */
-export function About() {
-  const { about } = site;
-
+export function About({ paragraphs }: { paragraphs: string[] }) {
   return (
     <Section id="about">
       <SectionHeading eyebrow="About">A bit about me</SectionHeading>
@@ -35,7 +32,7 @@ export function About() {
         </Reveal>
 
         <div className="flex flex-col gap-5 text-base leading-relaxed font-medium tracking-tight sm:text-lg">
-          {about.paragraphs.map((paragraph, index) => (
+          {paragraphs.map((paragraph, index) => (
             <Reveal key={paragraph.slice(0, 24)} delay={motion.stagger * (index + 1)}>
               <p>{paragraph}</p>
             </Reveal>

@@ -3,17 +3,17 @@ import { Card } from "@/components/ui/Card";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Tag } from "@/components/ui/Tag";
-import { skillGroups } from "@/data/skills";
 import { motion } from "@/lib/constants";
+import type { SkillGroup } from "@/types";
 
-/** Four grouped skill boxes, each a card of pill tags. */
-export function Skills() {
+/** Grouped skill boxes, each a card of pill tags. */
+export function Skills({ groups }: { groups: SkillGroup[] }) {
   return (
     <Section id="skills">
       <SectionHeading eyebrow="Skills">Tools I reach for</SectionHeading>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        {skillGroups.map((group, index) => (
+        {groups.map((group, index) => (
           /* h-full on the wrapper keeps the cards in a row equal height, the
              same as the grid's own stretch did before. */
           <Reveal key={group.id} delay={index * motion.stagger} className="h-full">

@@ -1,14 +1,13 @@
 import { Section } from "@/components/Section";
+import { ContactForm } from "@/components/ContactForm";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { trackAttrs } from "@/lib/analytics";
-import { site } from "@/data/site";
+import type { ContactContent } from "@/types";
 
-/** Centred call to action with the email, LinkedIn and GitHub buttons. */
-export function Contact() {
-  const { contact } = site;
-
+/** Centred call to action with the contact form and the direct-link buttons. */
+export function Contact({ contact }: { contact: ContactContent }) {
   return (
     <Section id="contact">
       {/* `scale` fades the whole card up from 95%. */}
@@ -42,6 +41,10 @@ export function Contact() {
               );
             })}
           </div>
+
+          {/* Direct links stay; the form adds a way to send a message without
+              leaving the page. */}
+          <ContactForm />
         </div>
       </Reveal>
     </Section>

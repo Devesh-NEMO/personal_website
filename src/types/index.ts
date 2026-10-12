@@ -235,6 +235,34 @@ export type ContactContent = {
   actions: ActionLink[];
 };
 
+/* --- admin-editable content --------------------------------------------------- */
+
+/**
+ * Everything the public home page reads from the admin-editable store
+ * (`src/lib/content.ts`). One object per request so the page composes a single
+ * `Promise.all` instead of juggling five collections.
+ *
+ * Mirrors the slices of `SiteProfile` that are editable: hero, about, contact
+ * text, the shared links, the marquee strip and the navbar.
+ */
+export type SiteContent = {
+  hero: HeroContent;
+  about: AboutContent;
+  contact: ContactContent;
+  links: SiteLinks;
+  marquee: MarqueeContent;
+  nav: ProfileNav;
+};
+
+/** A message sent through the contact form, stored in the `messages` collection. */
+export type ContactMessage = {
+  name: string;
+  email: string;
+  message: string;
+  /** New messages arrive unread; the admin inbox toggles this. */
+  read: boolean;
+};
+
 /* --- 404 and error pages ------------------------------------------------------ */
 
 /**

@@ -2,16 +2,18 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
 import Script from "next/script";
 
-import { SmoothScroll } from "@/components/layout/SmoothScroll";
-import { AnimatedBackground } from "@/components/background/AnimatedBackground";
-import { Analytics } from "@/components/analytics/Analytics";
-import { Splash } from "@/components/ui/Splash";
-import { Toast } from "@/components/ui/Toast";
 import { profile } from "@/data/profile";
 import { site } from "@/data/site";
 import { motionCssVars, analytics } from "@/lib/constants";
 
 import "./globals.css";
+
+/**
+ * Root layout: the shell every route shares — fonts, theme, metadata and the
+ * document skeleton. The *public* page furniture (animated background, splash,
+ * analytics, smooth scroll, toast) lives in `(site)/layout.tsx` so the admin
+ * area renders under this shell only, with none of that chrome.
+ */
 
 /**
  * Two typefaces, kept deliberately different in voice.
@@ -166,37 +168,6 @@ export default function RootLayout({
         className="min-h-dvh bg-bg text-fg antialiased"
         style={motionCssVars}
       >
-        {/*
-          Fixed, pointer-events-none backdrop: drifting dot grid, morphing hero
-          blob, floating shapes and a cursor glow. Everything it moves is a
-          compositor property, so it never affects layout, clicks or CLS. The
-          one exception is the blob's border-radius morph, which is a paint
-          property on purpose — see the note in globals.css section 7.
-        */}
-        <AnimatedBackground />
-        {/*
-          Momentum scrolling. Client-side and null-rendering, so it costs no
-          layout and nothing for coarse-pointer devices.
-        */}
-        <SmoothScroll />
-        {/*
-          Analytics: delegated click listener for `data-track` elements, plus
-          the Vercel tags when that is the configured provider. Both are gated
-          on `isAnalyticsEnabled()`, so a build with analytics switched off
-          ships neither the listener nor the SDK.
-        */}
-        <Analytics />
-        {/*
-          First-visit splash: the logo, a stepped progress bar, and a line of
-          cycling text. Session-storage gated and skipped entirely with reduced
-          motion, so it is never blocking.
-        */}
-        <Splash />
-        {/*
-          Toast notification. Mounted once, controlled by `toast.show()` from
-          anywhere. Primarily for the command menu's "Copied!" message.
-        */}
-        <Toast />
         {children}
       </body>
     </html>

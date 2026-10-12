@@ -1,4 +1,4 @@
-import { site } from "@/data/site";
+import type { MarqueeContent } from "@/types";
 
 /**
  * How many times the item sequence is repeated to fill one marquee run.
@@ -33,8 +33,8 @@ const REPEATS = 6;
  * single `sr-only` list of the same words, which is the part that carries
  * meaning.
  */
-export function Marquee() {
-  const { items, separator } = site.marquee;
+export function Marquee({ marquee }: { marquee: MarqueeContent }) {
+  const { items, separator } = marquee;
 
   // Trailing separator, so the join between repeats reads the same as the joins
   // inside a repeat — otherwise the seam shows up as a wider gap.
