@@ -32,6 +32,24 @@ function getSecret(): Uint8Array | null {
   return new TextEncoder().encode(secret);
 }
 
+/**
+ * Normalise a value pasted into a host's environment-variable UI.
+ *
+ * `.env.local` requires `\$` escaping (Next unescapes it locally), but Vercel
+ * and most hosts store the value verbatim — so a copied hash arrives with
+ * literal backslashes. Stray surrounding quotes and whitespace are common too.
+ * A bcrypt hash never legitimately contains a backslash or a quote, so
+ * stripping them is safe and turns a silent "invalid password" into a working
+ * login.
+ */
+function cleanEnv(value: string | undefined): string {
+  if (!value) return "";
+  return value
+    .trim()
+    .replace(/^["']+|["']+$/g, "")
+    .replace(/\\/g, "");
+}
+
 /** Constant-time string equality that tolerates differing lengths. */
 function safeEqual(a: string, b: string): boolean {
   const aBytes = Buffer.from(a);
@@ -111,11 +129,11 @@ export async function verifyCredentials(
   email: string,
   password: string,
 ): Promise<boolean> {
-  const adminEmail = process.env.ADMIN_EMAIL;
-  const adminHash = process.env.ADMIN_PASSWORD_HASH;
+  const adminEmail = cleanEnv(process.env.ADMIN_EMAIL);
+  const adminHash = cleanEnv(process.env.ADMIN_PASSWORD_HASH);
   if (!adminEmail || !adminHash) return false;
 
-  const emailMatches = safeEqual(email.trim().toLowerCase(), adminEmail.trim().toLowerCase());
+  const emailMatches = safeEqual(email.trim().toLowerCase(), adminEmail.toLowerCase());
   const passwordMatches = await bcrypt.compare(password, adminHash);
 
   return emailMatches && passwordMatches;

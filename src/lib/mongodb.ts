@@ -15,7 +15,19 @@ import { MongoClient } from "mongodb";
  * belt-and-braces guarantee that the chain cannot be bundled client-side.
  */
 
-const uri = process.env.MONGODB_URI;
+/**
+ * Normalise `MONGODB_URI` the same way the auth module normalises its secrets:
+ * a value pasted with surrounding quotes (as `.env.local` uses) or trailing
+ * whitespace would otherwise be an invalid connection string on a host that
+ * stores the value verbatim.
+ */
+function normalizeUri(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const cleaned = value.trim().replace(/^["']+|["']+$/g, "");
+  return cleaned === "" ? undefined : cleaned;
+}
+
+const uri = normalizeUri(process.env.MONGODB_URI);
 
 const globalForMongo = globalThis as unknown as {
   _mongoClient?: MongoClient;

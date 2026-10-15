@@ -309,6 +309,12 @@ function toObjectId(id: string): ObjectId {
 
 export async function getUnreadCount(): Promise<number> {
   await requireAdmin();
-  const db = await requireDb();
-  return await db.collection("messages").countDocuments({ read: false });
+  try {
+    const db = await requireDb();
+    return await db.collection("messages").countDocuments({ read: false });
+  } catch {
+    // The badge is decorative: a dead database must never crash the admin shell
+    // (which would otherwise take down every /admin page behind the layout).
+    return 0;
+  }
 }
