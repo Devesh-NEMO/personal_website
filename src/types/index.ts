@@ -143,6 +143,18 @@ export type Stat = {
   tone: CardTone;
 };
 
+/**
+ * One image in a project's gallery. The first entry is the card's cover; the
+ * rest are extra slides the carousel swipes through.
+ */
+export type ProjectImage = {
+  src: string;
+  /** Describes the image. Falls back to the project title. */
+  alt?: string;
+  /** Cloudinary public identifier for asset management. */
+  publicId?: string;
+};
+
 /** A single case study in the Work section. */
 export type Project = {
   id: string;
@@ -162,6 +174,12 @@ export type Project = {
   imageAlt?: string;
   /** Cloudinary public identifier for asset management. */
   imagePublicId?: string;
+  /**
+   * Optional gallery of 2-4 images shown in a carousel at the top of the card.
+   * The first entry doubles as the cover and keeps `image`/`imageAlt`/
+   * `imagePublicId` in sync. Omit it and the single `image` (if any) is shown.
+   */
+  images?: ProjectImage[];
 };
 
 /**

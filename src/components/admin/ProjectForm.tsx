@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { saveProjectAction } from "@/app/admin/actions";
 import { Alert } from "@/components/admin/Alert";
 import { Field } from "@/components/admin/Field";
-import { ImageUploader } from "@/components/admin/ImageUploader";
+import { MultiImageUploader } from "@/components/admin/MultiImageUploader";
 import { Input } from "@/components/admin/Input";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { TagInput } from "@/components/admin/TagInput";
@@ -84,18 +84,20 @@ export function ProjectForm({ project }: { project?: Project }) {
         </Field>
       </div>
 
-      <ImageUploader
-        label="Project thumbnail"
-        hint="Optional 16:9 thumbnail for the card. Select any format: JPG, PNG, WebP, GIF, AVIF or SVG."
-        urlName="image"
-        publicIdName="imagePublicId"
-        altName="imageAlt"
-        defaultUrl={project?.image}
-        defaultPublicId={project?.imagePublicId}
-        defaultAlt={project?.imageAlt ?? project?.title}
+      <MultiImageUploader
+        label="Project images"
+        hint="Upload 2-4 images (JPG, PNG, WebP, GIF, AVIF or SVG). The first is the card cover; visitors swipe through the rest."
+        name="imagesJson"
         folder="portfolio/projects"
-        aspect="video"
-        error={err("image")}
+        max={4}
+        error={err("images")}
+        initialImages={
+          project?.images && project.images.length > 0
+            ? project.images
+            : project?.image
+              ? [{ src: project.image, alt: project.imageAlt, publicId: project.imagePublicId }]
+              : []
+        }
       />
 
       {state.status !== "idle" && state.message ? (

@@ -107,6 +107,9 @@ export async function saveProjectAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  const images = parseProjectImages(formData.get("imagesJson"));
+  const cover = images[0];
+
   const parsed = projectSchema.safeParse({
     id: formData.get("id"),
     title: formData.get("title"),
@@ -123,9 +126,12 @@ export async function saveProjectAction(
       .filter((tag) => tag !== ""),
     href: formData.get("href"),
     tone: formData.get("tone"),
-    image: emptyToUndefined(formData.get("image")),
-    imageAlt: emptyToUndefined(formData.get("imageAlt")),
-    imagePublicId: emptyToUndefined(formData.get("imagePublicId")),
+    // The cover mirrors the first gallery entry so older readers of the single
+    // `image` field keep working.
+    image: cover?.src,
+    imageAlt: cover?.alt,
+    imagePublicId: cover?.publicId,
+    images: images.length > 0 ? images : undefined,
   });
 
   if (!parsed.success) {
@@ -448,4 +454,42 @@ function emptyToUndefined(value: FormDataEntryValue | null): string | undefined 
   if (value === null) return undefined;
   const text = String(value).trim();
   return text === "" ? undefined : text;
+}
+
+/**
+ * Parse the hidden `imagesJson` field the gallery uploader submits.
+ *
+ * Tolerant by design: a malformed payload or a bad entry is dropped rather than
+ * throwing, and the list is capped at four so a hand-crafted request cannot
+ * smuggle in an unbounded gallery.
+ */
+function parseProjectImages(
+  value: FormDataEntryValue | null,
+): { src: string; alt?: string; publicId?: string }[] {
+  if (typeof value !== "string" || value.trim() === "") return [];
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(value);
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(raw)) return [];
+
+  const images: { src: string; alt?: string; publicId?: string }[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const record = item as Record<string, unknown>;
+    const src = typeof record.src === "string" ? record.src.trim() : "";
+    if (src === "") continue;
+    const alt = typeof record.alt === "string" ? record.alt.trim() : "";
+    const publicId = typeof record.publicId === "string" ? record.publicId.trim() : "";
+    images.push({
+      src,
+      alt: alt === "" ? undefined : alt,
+      publicId: publicId === "" ? undefined : publicId,
+    });
+    if (images.length === 4) break;
+  }
+  return images;
 }

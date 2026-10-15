@@ -122,6 +122,13 @@ export const siteContentDocSchema = z.object({
   images: profileImagesSchema.optional(),
 });
 
+/** One image in a project's gallery (the cover is the first entry). */
+export const projectImageSchema = z.object({
+  src: z.string().trim().min(1, "Image URL or path is required").max(1000),
+  alt: z.string().trim().max(300).optional(),
+  publicId: z.string().trim().max(300).optional(),
+});
+
 export const projectSchema = z.object({
   id: z
     .string()
@@ -146,6 +153,11 @@ export const projectSchema = z.object({
   image: z.string().trim().max(1000).optional(),
   imageAlt: z.string().trim().max(300).optional(),
   imagePublicId: z.string().trim().max(300).optional(),
+  /**
+   * Optional gallery (up to 4). The first entry is the cover; the action also
+   * mirrors it into `image`/`imageAlt`/`imagePublicId` for older consumers.
+   */
+  images: z.array(projectImageSchema).max(4).optional(),
   /** Not part of the public Project type — sorting order for the grid/admin. */
   order: z.number().int().min(0).optional(),
 });
