@@ -52,7 +52,13 @@ export default async function AdminPanelLayout({
             <Link href="/admin" className="text-lg font-black tracking-tight">
               Admin<span className="text-accent">.</span>
             </Link>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <Link
+                href="/"
+                className="brutal-pill brutal-border bg-surface px-4 py-2 text-sm font-extrabold tracking-tight transition-colors duration-150 hover:bg-mint"
+              >
+                View site <span aria-hidden="true">↗</span>
+              </Link>
               <ThemeToggle />
               <form action={logout}>
                 <Button type="submit" variant="secondary" className="px-4 py-2 text-sm">
