@@ -53,7 +53,7 @@ export default async function HomePage() {
         <Contact contact={siteContent.contact} />
       </main>
 
-      <Footer />
+      <Footer nav={siteContent.nav} links={siteContent.links} />
     </>
   );
 }
