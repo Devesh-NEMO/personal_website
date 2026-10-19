@@ -9,13 +9,12 @@ import { Input } from "@/components/admin/Input";
 import { Textarea } from "@/components/admin/Textarea";
 import { Button } from "@/components/ui/Button";
 import { idleContactState, type ContactState } from "@/lib/form-state";
-// dsaf
 /**
  * The public contact form.
  *
- * Sits under the existing Email/LinkedIn/GitHub buttons, which stay as they
- * are. On success the fields reset and a confirmation shows; errors appear
- * inline per field.
+ * Lives in its own card in the right-hand column of the contact section, beside
+ * the direct links. On success the fields reset and a confirmation shows;
+ * errors appear inline per field.
  */
 export function ContactForm() {
   const [state, formAction, pending] = useActionState<ContactState, FormData>(
@@ -32,7 +31,7 @@ export function ContactForm() {
     <form
       ref={formRef} 
       action={formAction}
-      className="mx-auto mt-10 flex w-full max-w-xl flex-col gap-4 text-left"
+      className="mt-5 flex w-full flex-col gap-4 text-left"
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Name" htmlFor="contact-name" error={state.fieldErrors?.name?.[0]}>
