@@ -44,10 +44,15 @@
   --accent-contrast: #ffffff; /* LARGE text on --accent (hero highlight) */
   --accent-ink: #1b1b1b; /* NORMAL text on --accent (buttons, selection) */
 
-  /* Bright card palette */
+  /*
+   * Bright card palette. `--periwinkle` is deliberately more saturated than the
+   * other three: a large periwinkle surface (the contact card, the login card)
+   * washes out against the cream page at the pale #c7ceea — barely 1.4:1 — so
+   * it needs the deeper value to hold the same presence the dark indigo has.
+   */
   --mint: #a8e6cf;
   --peach: #ffd3b6;
-  --periwinkle: #c7ceea;
+  --periwinkle: #aeb9ef;
   --pink: #ffaaa5;
 
   /* Hard offset shadows — deliberately zero blur */

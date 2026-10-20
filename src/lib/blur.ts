@@ -10,7 +10,7 @@ import type { CardTone } from "@/types";
 const BLUR_TONES: Record<CardTone, [string, string]> = {
   mint: ["#a8e6cf", "#2f5d4b"],
   peach: ["#ffd3b6", "#6e4a32"],
-  periwinkle: ["#c7ceea", "#3b4270"],
+  periwinkle: ["#aeb9ef", "#3b4270"],
   pink: ["#ffaaa5", "#703b38"],
 };
 
