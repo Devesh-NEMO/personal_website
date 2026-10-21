@@ -7,7 +7,7 @@ import { Alert } from "@/components/admin/Alert";
 import { Field } from "@/components/admin/Field";
 import { Input } from "@/components/admin/Input";
 import { Textarea } from "@/components/admin/Textarea";
-import { Button } from "@/components/ui/Button"; 
+import { Button } from "@/components/ui/Button";  
 import { idleContactState, type ContactState } from "@/lib/form-state";
 /**
  * The public contact form.
