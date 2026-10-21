@@ -35,15 +35,34 @@ export function ContactForm() {
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Name" htmlFor="contact-name" error={state.fieldErrors?.name?.[0]}>
-          <Input id="contact-name" name="name" autoComplete="name" required />
+          <Input
+            id="contact-name"
+            name="name"
+            autoComplete="name"
+            required
+            className="font-input"
+          />
         </Field>
         <Field label="Email" htmlFor="contact-email" error={state.fieldErrors?.email?.[0]}>
-          <Input id="contact-email" name="email" type="email" autoComplete="email" required />
+          <Input
+            id="contact-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            className="font-input"
+          />
         </Field>
       </div>
 
       <Field label="Message" htmlFor="contact-message" error={state.fieldErrors?.message?.[0]}>
-        <Textarea id="contact-message" name="message" rows={5} required />
+        <Textarea
+          id="contact-message"
+          name="message"
+          rows={5}
+          required
+          className="font-input"
+        />
       </Field>
 
       {/* Honeypot: hidden from people, tempting to bots. Must stay empty. */}

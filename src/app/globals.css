@@ -182,6 +182,22 @@ html.dark {
   font-stretch: var(--display-stretch);
 }
 
+/*
+ * Opt *typed* text into the display face: the contact form's fields.
+ *
+ * Tailwind's preflight sets `font: inherit` on every form control, so anything
+ * you type in an input was set in the body face — the same Inter as the copy
+ * around it, which made the fields read as plain boxes rather than as part of
+ * the design. This gives the text the user actually types its own voice.
+ *
+ * The width axis is deliberately left alone. `--display-stretch` (85%) is a
+ * display-size decision made for the hero heading; at 14px it only cramps the
+ * letters. The face alone is already a clear change of voice.
+ */
+@utility font-input {
+  font-family: var(--display-stack);
+}
+
 /* -----------------------------------------------------------------------------
    4. BASE LAYER
    -------------------------------------------------------------------------- */
