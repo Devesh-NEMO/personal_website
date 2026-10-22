@@ -40,7 +40,7 @@ export function ContactForm() {
             name="name"
             autoComplete="name"
             required
-            className="font-input"
+            className="font-input" 
           />
         </Field>
         <Field label="Email" htmlFor="contact-email" error={state.fieldErrors?.email?.[0]}>
