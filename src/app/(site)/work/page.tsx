@@ -56,9 +56,9 @@ export default async function WorkPage() {
             <span className="heading-underline" aria-hidden="true" />
 
             <p className="max-w-2xl text-base leading-relaxed font-medium tracking-tight text-fg/80 sm:text-lg">
-              {projects.length} case studies, newest ideas first. The home page
-              keeps the six that matter most — the rest live here, so nothing
-              gets buried.
+              {projects.length > 0
+                ? `${projects.length} case studies, newest ideas first. The home page keeps the six that matter most — the rest live here, so nothing gets buried.`
+                : "New case studies land here as soon as they are published. The home page keeps the six that matter most."}
             </p>
 
             <Link

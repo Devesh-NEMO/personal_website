@@ -19,6 +19,20 @@ import type { Project } from "@/types";
  * periwinkle → pink down the grid.
  */
 export function ProjectGrid({ projects }: { projects: Project[] }) {
+  if (projects.length === 0) {
+    return (
+      <div className="brutal-border rounded-card bg-surface p-8 text-center shadow-brutal sm:p-12">
+        <p className="font-display text-2xl font-black tracking-tight">
+          Nothing published yet<span className="text-accent">.</span>
+        </p>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed font-medium tracking-tight text-fg/70">
+          Case studies appear here as soon as they are added from the admin
+          panel.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <ul className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
       {projects.map((project, index) => {
