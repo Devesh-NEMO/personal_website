@@ -180,6 +180,17 @@ export type Project = {
    * `imagePublicId` in sync. Omit it and the single `image` (if any) is shown.
    */
   images?: ProjectImage[];
+  /**
+   * Sort priority. Lower numbers come first: 1-6 are the cards on the home
+   * page, everything above lives behind the "See more" link. A new project is
+   * given the next free number on insert and can be renumbered from the admin.
+   */
+  priority?: number;
+  /**
+   * When the row was first written. Set by the database on insert — never by
+   * the form — and shown in the admin list so it is clear how new a project is.
+   */
+  createdAt?: Date;
 };
 
 /**

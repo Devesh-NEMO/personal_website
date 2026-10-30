@@ -63,6 +63,8 @@ function toMessage(error: unknown): string {
 function refreshPublicContent(tag: string): void {
   updateTag(tag);
   revalidatePath("/");
+  // The all-projects page shares the same data, so it is refreshed too.
+  revalidatePath("/work");
 }
 
 /* --- auth -------------------------------------------------------------------- */
@@ -126,6 +128,8 @@ export async function saveProjectAction(
       .filter((tag) => tag !== ""),
     href: formData.get("href"),
     tone: formData.get("tone"),
+    // Blank means "let the writer pick the next free number".
+    priority: formData.get("priority"),
     // The cover mirrors the first gallery entry so older readers of the single
     // `image` field keep working.
     image: cover?.src,

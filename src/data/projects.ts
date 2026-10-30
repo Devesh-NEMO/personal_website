@@ -23,6 +23,7 @@ export const projects: Project[] = [
     image: "/images/projects/retail-demand.png",
     imageAlt: "Line chart of forecast versus actual weekly sales across 1,800 SKUs",
     tone: "mint",
+    priority: 1,
   },
   {
     id: "churn-model",
@@ -38,6 +39,7 @@ export const projects: Project[] = [
     image: "/images/projects/churn-model.png",
     imageAlt: "Risk distribution of predicted churn scores by customer segment",
     tone: "peach",
+    priority: 2,
   },
   {
     id: "marketing-mix",
@@ -53,6 +55,7 @@ export const projects: Project[] = [
     image: "/images/projects/marketing-mix.png",
     imageAlt: "Table of channel spend and return on investment by campaign",
     tone: "periwinkle",
+    priority: 3,
   },
   {
     id: "logistics-etl",
@@ -68,6 +71,7 @@ export const projects: Project[] = [
     image: "/images/projects/logistics-etl.png",
     imageAlt: "Diagram of the nightly warehouse ETL pipeline with load status per stage",
     tone: "pink",
+    priority: 4,
   },
   {
     id: "product-funnel",
@@ -83,6 +87,7 @@ export const projects: Project[] = [
     image: "/images/projects/product-funnel.png",
     imageAlt: "Funnel chart showing the drop-off between the second and third signup steps",
     tone: "mint",
+    priority: 5,
   },
   {
     id: "forecast-explainer",
@@ -98,5 +103,6 @@ export const projects: Project[] = [
     image: "/images/projects/forecast-explainer.png",
     imageAlt: "Bar chart comparing three forecasting models against actual demand",
     tone: "peach",
+    priority: 6,
   },
 ];

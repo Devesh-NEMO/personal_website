@@ -56,20 +56,44 @@ export async function saveProject(project: Project): Promise<void> {
 
   const existing = await collection.findOne({ id: project.id });
 
+  /*
+   * `undefined` values are dropped rather than spread: the driver would write
+   * them as null, and a field the form did not send would blank out a column.
+   */
+  const { priority, ...fields } = project;
+  const patch = Object.fromEntries(
+    Object.entries(fields).filter(([, value]) => value !== undefined),
+  );
+
   if (existing) {
-    // `order` is intentionally not touched on edit: the list position is the
-    // admin's, not the form's.
+    // An edit that leaves the number blank keeps the priority already stored —
+    // the number belongs to the admin, not to the form's default value.
+    const kept = typeof existing.priority === "number" ? existing.priority : 1;
+
     await collection.updateOne(
       { id: project.id },
-      { $set: { ...project, updatedAt: now } },
+      { $set: { ...patch, priority: priority ?? kept, updatedAt: now } },
     );
     return;
   }
 
+  /*
+   * A brand-new project queues up behind everything already placed: one past
+   * the highest priority in use. On an empty collection that is 1, which puts
+   * the very first project on the home page where it belongs.
+   */
+  const highest = await collection
+    .find({ priority: { $type: "number" } })
+    .sort({ priority: -1 })
+    .limit(1)
+    .next();
+  const top = (highest as { priority?: number } | null)?.priority;
+  const assigned = priority ?? (typeof top === "number" ? top + 1 : 1);
+
   await collection.updateOne(
     { id: project.id },
     {
-      $set: { ...project, updatedAt: now },
+      $set: { ...patch, priority: assigned, updatedAt: now },
       $setOnInsert: {
         _id: project.id,
         createdAt: now,

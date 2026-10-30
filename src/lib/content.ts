@@ -53,7 +53,7 @@ export const contentTags = {
 
 /**
  * All documents in a collection, ordered by `order`, without the internal
- * fields (`_id`, `order`, timestamps). Returns `null` when the database is
+ * fields (`_id`, `order`, `updatedAt`). Returns `null` when the database is
  * unreachable — the caller decides on the static fallback.
  */
 async function fetchDocs(collection: string): Promise<unknown[] | null> {
@@ -65,7 +65,7 @@ async function fetchDocs(collection: string): Promise<unknown[] | null> {
       .collection(collection)
       .find(
         {},
-        { projection: { _id: 0, createdAt: 0, updatedAt: 0, order: 0 } },
+        { projection: { _id: 0, updatedAt: 0, order: 0 } },
       )
       .sort({ order: 1 })
       .toArray()) as unknown[];
@@ -91,16 +91,30 @@ function parseAll<T>(docs: unknown[], schema: ZodType<T>): T[] | null {
 
 /* --- public getters (cached) --------------------------------------------------- */
 
+/**
+ * Orders projects by priority: the lowest number wins, and rows without one
+ * sink to the bottom instead of jumping to the top (Mongo sorts a missing
+ * `priority` first, which is exactly wrong here). Ties keep the database order,
+ * because `Array#sort` is stable — and that order is insertion order.
+ */
+export function sortProjects(projects: Project[]): Project[] {
+  return [...projects].sort((a, b) => {
+    const left = a.priority ?? Number.MAX_SAFE_INTEGER;
+    const right = b.priority ?? Number.MAX_SAFE_INTEGER;
+    return left - right;
+  });
+}
+
 export async function getProjects(): Promise<Project[]> {
   "use cache";
   cacheLife("hours");
   cacheTag(contentTags.projects);
 
   const docs = await fetchDocs("projects");
-  if (!docs || docs.length === 0) return staticProjects;
+  if (!docs || docs.length === 0) return sortProjects(staticProjects);
 
   const parsed = parseAll(docs, projectSchema);
-  return parsed ?? staticProjects;
+  return parsed ? sortProjects(parsed) : sortProjects(staticProjects);
 }
 
 export async function getSkillGroups(): Promise<SkillGroup[]> {

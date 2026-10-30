@@ -160,6 +160,17 @@ export const projectSchema = z.object({
   images: z.array(projectImageSchema).max(4).optional(),
   /** Not part of the public Project type — sorting order for the grid/admin. */
   order: z.number().int().min(0).optional(),
+  /**
+   * 1-6 show on the home page; the rest sit behind "See more". Optional so
+   * rows written before priorities existed still validate.
+   */
+  priority: z
+    .preprocess(
+      (value) => (value === "" || value === null ? undefined : value),
+      z.coerce.number().int().min(1, "Priority starts at 1").max(999).optional(),
+    ),
+  /** Stamped by MongoDB on insert; the admin list shows it. */
+  createdAt: z.coerce.date().optional(),
 });
 
 export const skillGroupSchema = z.object({

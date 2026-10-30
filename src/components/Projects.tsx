@@ -1,111 +1,63 @@
-import { ProjectCarousel } from "@/components/ProjectCarousel";
+import Link from "next/link";
+
+import { ProjectGrid } from "@/components/ProjectGrid";
 import { Section } from "@/components/Section";
-import { Card } from "@/components/ui/Card";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Tag } from "@/components/ui/Tag";
-import { trackAttrs } from "@/lib/analytics";
 import { motion } from "@/lib/constants";
-import { toneOrder } from "@/lib/tone";
 import type { Project } from "@/types";
 
 /**
- * Case study grid. One column on mobile, two from `sm`, three from `lg`.
+ * How many projects the home page shows. The content layer hands them over
+ * already sorted by priority, so this is just a slice off the top — the rest
+ * live on /work.
+ */
+const HOME_SLOTS = 6;
+
+/**
+ * Work section: the six lowest-priority projects, plus a link to the full
+ * archive when there are more.
  *
- * The cards come from the content layer. The tone is used when set, otherwise
- * the palette cycles mint → peach → periwinkle → pink down the grid.
+ * The cards themselves are <ProjectGrid>, shared with /work, so the two pages
+ * can never drift apart. Everything here is the framing: the heading, the
+ * count line and the "See more" pill.
  */
 export function Projects({ projects }: { projects: Project[] }) {
+  const visible = projects.slice(0, HOME_SLOTS);
+  const remaining = projects.length - visible.length;
+
   return (
     <Section id="work">
       <SectionHeading eyebrow="Work">Selected projects</SectionHeading>
 
-      <ul className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
-        {projects.map((project, index) => {
-          /* Prefer the gallery; fall back to the legacy single image for rows
-             written before multi-image support. */
-          const slides =
-            project.images && project.images.length > 0
-              ? project.images.map((image) => ({ src: image.src, alt: image.alt }))
-              : project.image
-                ? [{ src: project.image, alt: project.imageAlt }]
-                : [];
+      <ProjectGrid projects={visible} />
 
-          return (
-            /* `as="li"` so the reveal *is* the grid item — no extra wrapper div,
-               which would otherwise break the equal-height row and the
-               definition of the list semantics. The 80ms stagger comes straight
-               from motion.stagger. */
-            <Reveal as="li" key={project.id} className="flex" delay={index * motion.stagger}>
-              <Card
-                tone={project.tone ?? toneOrder[index % toneOrder.length]}
-                interactive
-                /* overflow-hidden lets the thumbnail clip to the card's 16px
-                   radius while its own 3px bottom border stays crisp. */
-                className="flex w-full flex-col overflow-hidden"
-              >
-                {slides.length > 0 ? (
-                  <ProjectCarousel images={slides} label={project.title} />
-                ) : null}
+      {remaining > 0 ? (
+        <Reveal direction="up" delay={motion.stagger} className="mt-10">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <p className="text-sm font-medium tracking-tight text-fg/70">
+              Showing {visible.length} of {projects.length} projects.
+            </p>
 
-                <div className="flex flex-1 flex-col gap-4 p-6">
-                  <h3 className="text-xl font-black tracking-tight">{project.title}</h3>
-
-                  <p className="text-sm leading-relaxed font-medium tracking-tight">
-                    {project.description}
-                  </p>
-
-                  {/* Outcome bullets — the measurable result of the work. */}
-                  <ul className="flex flex-col gap-2 text-sm font-semibold tracking-tight">
-                    {project.results.map((result) => (
-                      <li key={result} className="flex gap-2">
-                        <span aria-hidden="true" className="font-black">
-                          →
-                        </span>
-                        <span>{result}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <ul className="flex flex-wrap gap-2">
-                    {project.tags.map((tag) => (
-                      <li key={tag}>
-                        <Tag variant="filled">{tag}</Tag>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <a
-                    href={project.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    /* Built from the title so the visible "View project" is always
-                       contained in the accessible name (axe label-content-name-mismatch). */
-                    aria-label={`View project: ${project.title}`}
-                    className="mt-auto inline-flex items-center gap-1.5 pt-1 text-sm font-extrabold tracking-tight underline decoration-[3px] underline-offset-4 transition-colors hover:decoration-accent"
-                    {...trackAttrs("project_click", { name: project.title })}
-                  >
-                    View project
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M7 17 17 7M8 7h9v9" />
-                    </svg>
-                  </a>
-                </div>
-              </Card>
-            </Reveal>
-          );
-        })}
-      </ul>
+            {/* A Next.js Link rather than <Button>: the shared button renders a
+                plain <a> for non-hash hrefs, which would reload the whole app
+                just to see the archive. */}
+            <Link
+              href="/work"
+              className={
+                "brutal-pill brutal-border inline-flex items-center justify-center gap-2 bg-accent px-6 py-3 " +
+                "text-base font-extrabold tracking-tight text-accent-ink shadow-brutal " +
+                "transition-[transform,box-shadow,background-color] duration-150 " +
+                "hover:-translate-x-[2px] hover:-translate-y-[2px] hover:bg-mint hover:text-fg hover:shadow-brutal-lg " +
+                "active:translate-x-0 active:translate-y-0 active:shadow-none"
+              }
+            >
+              See {remaining} more {remaining === 1 ? "project" : "projects"}
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </Reveal>
+      ) : null}
     </Section>
   );
 }

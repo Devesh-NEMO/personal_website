@@ -38,13 +38,19 @@ async function main() {
   );
 
   // Projects — `_id` is the stable slug so the upsert key doubles as the key.
+  // Priority follows the file order, so the first six land on the home page.
   let created = 0;
   let updated = 0;
   for (const [index, project] of projects.entries()) {
     const result = await projectColl.updateOne(
       { id: project.id },
       {
-        $set: { ...project, order: index, updatedAt: now },
+        $set: {
+          ...project,
+          order: index,
+          priority: project.priority ?? index + 1,
+          updatedAt: now,
+        },
         $setOnInsert: { _id: project.id, createdAt: now },
       },
       { upsert: true },

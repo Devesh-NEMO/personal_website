@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { Button } from "@/components/ui/Button";
 import { ProfileImage } from "@/components/ProfileImage";
 import { Reveal } from "@/components/ui/Reveal";
@@ -7,14 +9,33 @@ import { profile } from "@/data/profile";
 import { motion } from "@/lib/constants";
 import type { HeroContent, ProfileImages, Stat } from "@/types";
 
+/** Inline custom properties for the CSS-driven entrance below. */
+type MotionStyle = CSSProperties & Record<`--${string}`, string>;
+
+/**
+ * `--enter-delay` is the hero's load-time offset in ms; `extra` carries the
+ * "talk." pop delay, which is timed against the same timeline.
+ */
+function enterDelay(
+  delay: number,
+  extra: Record<`--${string}`, string> = {},
+): MotionStyle {
+  return { "--enter-delay": `${delay}ms`, ...extra };
+}
+
 /**
  * Above-the-fold hero: name, positioning line, two calls to action and the
  * stat tiles. The heading is assembled from the content layer so the
  * highlighted word can be swapped without touching markup.
  *
  * The hero is the one place that does not wait for a scroll: it is already on
- * screen, so its reveal sequence plays on load against a fixed timeline in
- * `motion.hero` rather than against scroll position.
+ * screen, so its sequence plays on load against a fixed timeline in
+ * `motion.hero`. It deliberately does **not** use <Reveal> for those elements:
+ * the in-view hook would (correctly) report them visible on the first commit
+ * and skip the animation entirely. Instead they carry `data-enter` and are
+ * animated from CSS, which starts on the first painted frame, needs no
+ * JavaScript, and never flashes a hidden state at a reduced-motion visitor.
+ * See section 8b of globals.css.
  */
 export function Hero({
   hero,

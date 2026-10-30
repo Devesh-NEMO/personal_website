@@ -84,6 +84,26 @@ export function ProjectForm({ project }: { project?: Project }) {
         </Field>
       </div>
 
+      <Field
+        label="Priority"
+        htmlFor="project-priority"
+        hint="1–6 appear on the home page. Everything above 6 lives on the “See more” page. Lowest number shows first."
+        error={err("priority")}
+      >
+        <Input
+          id="project-priority"
+          name="priority"
+          type="number"
+          min={1}
+          max={999}
+          step={1}
+          inputMode="numeric"
+          defaultValue={project?.priority ?? ""}
+          placeholder="Next free number"
+          className="max-w-40"
+        />
+      </Field>
+
       <MultiImageUploader
         label="Project images"
         hint="Upload 2-4 images (JPG, PNG, WebP, GIF, AVIF or SVG). The first is the card cover; visitors swipe through the rest."
