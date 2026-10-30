@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 
 import { saveProjectAction } from "@/app/admin/actions";
@@ -124,10 +125,27 @@ export function ProjectForm({ project }: { project?: Project }) {
         <Alert tone={state.status === "success" ? "success" : "error"}>{state.message}</Alert>
       ) : null}
 
-      <div>
+      <div className="flex flex-wrap items-center gap-3">
         <SubmitButton pendingLabel="Saving…">
           {editing ? "Save changes" : "Create project"}
         </SubmitButton>
+
+        {/* While editing, this is the way out that does not involve saving the
+            project first: it switches the page back to create mode. */}
+        {editing ? (
+          <Link
+            href="/admin/projects#new-project"
+            className={
+              "brutal-pill brutal-border inline-flex items-center justify-center gap-2 bg-surface px-6 py-3 " +
+              "text-base font-extrabold tracking-tight shadow-brutal " +
+              "transition-[transform,box-shadow,background-color] duration-150 " +
+              "hover:-translate-x-[2px] hover:-translate-y-[2px] hover:bg-peach hover:shadow-brutal-lg " +
+              "active:translate-x-0 active:translate-y-0 active:shadow-none"
+            }
+          >
+            <span aria-hidden="true">+</span> New project
+          </Link>
+        ) : null}
       </div>
 
       {/* `pending` is unused here but keeps the hook contract explicit. */}

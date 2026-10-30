@@ -119,14 +119,18 @@ export default async function ProjectsAdminPage({
         )}
       </section>
 
-      <section className="flex flex-col gap-4">
+      <section id="new-project" className="flex scroll-mt-24 flex-col gap-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-black tracking-tight">
             {editing ? `Edit “${editing.title}”` : "New project"}
           </h2>
           {editing ? (
-            <Link href="/admin/projects" className="text-sm font-bold underline">
-              Cancel edit
+            /* Goes straight to the empty form instead of reloading the page. */
+            <Link
+              href="/admin/projects#new-project"
+              className="brutal-pill brutal-border inline-flex items-center gap-1.5 bg-mint px-3.5 py-1.5 text-sm font-extrabold tracking-tight transition-colors duration-150 hover:bg-accent hover:text-accent-ink"
+            >
+              <span aria-hidden="true">+</span> New project
             </Link>
           ) : null}
         </div>
