@@ -125,8 +125,8 @@ export const siteContentDocSchema = z.object({
 /** One image in a project's gallery (the cover is the first entry). */
 export const projectImageSchema = z.object({
   src: z.string().trim().min(1, "Image URL or path is required").max(1000),
-  alt: z.string().trim().max(300).optional(),
-  publicId: z.string().trim().max(300).optional(),
+  alt: z.string().trim().max(300).nullable().optional(),
+  publicId: z.string().trim().max(300).nullable().optional(),
 });
 
 export const projectSchema = z.object({
