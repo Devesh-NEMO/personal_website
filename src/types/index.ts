@@ -150,9 +150,9 @@ export type Stat = {
 export type ProjectImage = {
   src: string;
   /** Describes the image. Falls back to the project title. */
-  alt?: string;
+  alt?: string | null;
   /** Cloudinary public identifier for asset management. */
-  publicId?: string;
+  publicId?: string | null;
 };
 
 /** A single case study in the Work section. */

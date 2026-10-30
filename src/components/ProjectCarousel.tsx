@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 /** Minimum horizontal drag (px) before a gesture counts as a swipe. */
 const SWIPE_THRESHOLD = 40;
 
-type Slide = { src: string; alt?: string };
+type Slide = { src: string; alt?: string | null };
 
 /**
  * The project card gallery.

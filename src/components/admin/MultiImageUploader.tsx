@@ -21,7 +21,7 @@ type MultiImageUploaderProps = {
   error?: string;
   /** Name of the hidden input that carries the gallery to the server action. */
   name: string;
-  initialImages?: { src: string; alt?: string; publicId?: string }[];
+  initialImages?: { src: string; alt?: string | null; publicId?: string | null }[];
   folder?: string;
   /** Upper bound on the gallery size. Defaults to 4. */
   max?: number;
