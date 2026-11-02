@@ -13,7 +13,7 @@ import type { ProfileImages, ProfileNav } from "@/types";
  * Keep every file under 200 KB. jpg, png and webp are all accepted.
  *
  * `tone` is only used to tint the blur placeholder and the fallback that shows
- * if a file goes missing, so it should match the card the image sits on.
+ * if a file goes missing, so it should match the card the image sits on. 
  */
 export const profile: ProfileImages = {
   avatar: {
