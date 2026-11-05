@@ -59,9 +59,9 @@ function toMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong.";
 }
 
-/** Invalidate the home page after a content change. */
-function refreshPublicContent(tag: string): void {
-  updateTag(tag);
+/** Invalidate the public pages after a content change. */
+function refreshPublicContent(): void {
+  updateTag(contentTags.data);
   revalidatePath("/");
   // The all-projects page shares the same data, so it is refreshed too.
   revalidatePath("/work");
@@ -148,13 +148,13 @@ export async function saveProjectAction(
     return { status: "error", message: toMessage(error) };
   }
 
-  refreshPublicContent(contentTags.projects);
+  refreshPublicContent();
   return { status: "success", message: "Project saved." };
 }
 
 export async function deleteProjectAction(formData: FormData): Promise<void> {
   await deleteProject(String(formData.get("id") ?? ""));
-  refreshPublicContent(contentTags.projects);
+  refreshPublicContent();
 }
 
 /* --- skills ------------------------------------------------------------------ */
@@ -180,13 +180,13 @@ export async function saveSkillGroupAction(
     return { status: "error", message: toMessage(error) };
   }
 
-  refreshPublicContent(contentTags.skillGroups);
+  refreshPublicContent();
   return { status: "success", message: "Skill group saved." };
 }
 
 export async function deleteSkillGroupAction(formData: FormData): Promise<void> {
   await deleteSkillGroup(String(formData.get("id") ?? ""));
-  refreshPublicContent(contentTags.skillGroups);
+  refreshPublicContent();
 }
 
 /* --- stats ------------------------------------------------------------------- */
@@ -212,13 +212,13 @@ export async function saveStatAction(
     return { status: "error", message: toMessage(error) };
   }
 
-  refreshPublicContent(contentTags.stats);
+  refreshPublicContent();
   return { status: "success", message: "Stat saved." };
 }
 
 export async function deleteStatAction(formData: FormData): Promise<void> {
   await deleteStat(String(formData.get("id") ?? ""));
-  refreshPublicContent(contentTags.stats);
+  refreshPublicContent();
 }
 
 /* --- site content ------------------------------------------------------------ */
@@ -254,7 +254,7 @@ export async function saveHeroAction(
     return { status: "error", message: toMessage(error) };
   }
 
-  refreshPublicContent(contentTags.site);
+  refreshPublicContent();
   return { status: "success", message: "Hero saved." };
 }
 
@@ -279,7 +279,7 @@ export async function saveAboutAction(
     return { status: "error", message: toMessage(error) };
   }
 
-  refreshPublicContent(contentTags.site);
+  refreshPublicContent();
   return { status: "success", message: "About saved." };
 }
 
@@ -310,7 +310,7 @@ export async function saveContactAction(
     return { status: "error", message: toMessage(error) };
   }
 
-  refreshPublicContent(contentTags.site);
+  refreshPublicContent();
   return { status: "success", message: "Contact section saved." };
 }
 
@@ -333,7 +333,7 @@ export async function saveMarqueeAction(
     return { status: "error", message: toMessage(error) };
   }
 
-  refreshPublicContent(contentTags.site);
+  refreshPublicContent();
   return { status: "success", message: "Marquee saved." };
 }
 
@@ -369,7 +369,7 @@ export async function saveNavAction(
     return { status: "error", message: toMessage(error) };
   }
 
-  refreshPublicContent(contentTags.site);
+  refreshPublicContent();
   return { status: "success", message: "Navigation saved." };
 }
 
@@ -437,7 +437,7 @@ export async function saveProfileImagesAction(
     return { status: "error", message: toMessage(error) };
   }
 
-  refreshPublicContent(contentTags.site);
+  refreshPublicContent();
   return { status: "success", message: "Profile photos saved successfully." };
 }
 

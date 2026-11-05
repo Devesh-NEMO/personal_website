@@ -10,15 +10,23 @@ import { stats as staticStats } from "@/data/stats";
 import { site as staticSite } from "@/data/site";
 import { connectToDatabase } from "@/lib/mongodb";
 import {
+  aboutContentSchema,
+  contactContentSchema,
+  heroContentSchema,
+  marqueeContentSchema,
+  navSchema,
+  profileImagesSchema,
   projectSchema,
-  siteContentDocSchema,
+  siteLinksSchema,
   skillGroupSchema,
   statSchema,
 } from "@/lib/schemas";
 import type {
   ContactContent,
+  ProfileImages,
   Project,
   SiteContent,
+  SiteData,
   SiteLinks,
   SkillGroup,
   Stat,
@@ -30,63 +38,94 @@ import type {
  * ============================================================================
  * The single place the public site and the admin both read and write content.
  *
+ * Everything lives in ONE MongoDB document — `siteContent` with `_id: "main"`:
+ * the hero, about, contact text, links, marquee, navbar, profile images, and
+ * the projects / skillGroups / stats lists. `getSiteData()` reads and validates
+ * that document once per cache window; the narrower getters are views over it.
+ *
  * Reads are cached with `"use cache"` + `cacheTag`, so the home page renders
  * from the Next cache instead of hitting Atlas on every request. After an
- * admin mutation, the server action calls `updateTag(...)` for the affected
- * collection plus `revalidatePath("/")`, which refreshes the public page
- * without a rebuild (see the admin actions in phase 2/3).
+ * admin mutation, the server action calls `updateTag(contentTags.data)` plus
+ * `revalidatePath("/")`, which refreshes the public pages without a rebuild.
  *
- * Every read degrades to the static files in `src/data/*` when the database
- * is unreachable, empty, or holding a document that fails validation — the
+ * Every read degrades to the static files in `src/data/*` when the database is
+ * unreachable, the document is missing, or a section fails validation — the
  * site can never break because of the database.
  */
 
 /** Cache tags, kept here so read paths and admin writes agree on the names. */
 export const contentTags = {
-  projects: "site:projects",
-  skillGroups: "site:skillGroups",
-  stats: "site:stats",
-  site: "site:siteContent",
+  /**
+   * One tag for the whole document. Every section lives in the same row, so a
+   * write to any of them invalidates all of it — a finer split would only risk
+   * serving a half-updated page.
+   */
+  data: "site:data",
 } as const;
+
+/** The raw document shape: the fixed key plus arbitrary stored sections. */
+type RawSiteDoc = { _id: string } & Record<string, unknown>;
 
 /* --- read helpers ------------------------------------------------------------- */
 
 /**
- * All documents in a collection, ordered by `order`, without the internal
- * fields (`_id`, `order`, `updatedAt`). Returns `null` when the database is
- * unreachable — the caller decides on the static fallback.
+ * The single portfolio document, or `null` when the database is unreachable.
+ * Unknown fields (`_id`, `updatedAt`, template leftovers) are ignored by the
+ * per-section schemas.
  */
-async function fetchDocs(collection: string): Promise<unknown[] | null> {
+async function readSiteDoc(): Promise<RawSiteDoc | null> {
   const db = await connectToDatabase();
   if (!db) return null;
 
   try {
-    return (await db
-      .collection(collection)
-      .find(
-        {},
-        { projection: { _id: 0, updatedAt: 0, order: 0 } },
-      )
-      .sort({ order: 1 })
-      .toArray()) as unknown[];
+    return await db.collection<RawSiteDoc>("siteContent").findOne({ _id: "main" });
   } catch {
     return null;
   }
 }
 
+/** Parse one section, falling back to the static value when it is invalid. */
+function parseOr<T>(schema: ZodType<T>, value: unknown, fallback: T): T {
+  const result = schema.safeParse(value);
+  return result.success ? result.data : fallback;
+}
+
 /**
- * Parse a list of raw documents with the collection's schema. Returns `null`
- * when any document fails — better to fall back wholesale than to render a
- * half-broken grid.
+ * Parse a stored list. Returns the fallback wholesale when any entry fails —
+ * better than rendering a half-broken grid, and the same rule the old
+ * per-collection reader used.
  */
-function parseAll<T>(docs: unknown[], schema: ZodType<T>): T[] | null {
+function parseList<T>(schema: ZodType<T>, value: unknown, fallback: T[]): T[] {
+  if (!Array.isArray(value)) return fallback;
+
   const parsed: T[] = [];
-  for (const doc of docs) {
-    const result = schema.safeParse(doc);
-    if (!result.success) return null;
+  for (const item of value) {
+    const result = schema.safeParse(item);
+    if (!result.success) return fallback;
     parsed.push(result.data);
   }
   return parsed;
+}
+
+/**
+ * Temporary bridge for documents written before the lists moved into the single
+ * document: read the old collection instead. Remove once the migration has run
+ * everywhere (see `scripts/migrate-to-single-doc.ts`).
+ */
+async function legacyList<T>(
+  collection: string,
+  schema: ZodType<T>,
+  fallback: T[],
+): Promise<T[]> {
+  const db = await connectToDatabase();
+  if (!db) return fallback;
+
+  try {
+    const docs = await db.collection(collection).find({}).sort({ order: 1 }).toArray();
+    return parseList(schema, docs, fallback);
+  } catch {
+    return fallback;
+  }
 }
 
 /* --- public getters (cached) --------------------------------------------------- */
@@ -94,8 +133,8 @@ function parseAll<T>(docs: unknown[], schema: ZodType<T>): T[] | null {
 /**
  * Orders projects by priority: the lowest number wins, and rows without one
  * sink to the bottom instead of jumping to the top (Mongo sorts a missing
- * `priority` first, which is exactly wrong here). Ties keep the database order,
- * because `Array#sort` is stable — and that order is insertion order.
+ * `priority` first, which is exactly wrong here). Ties keep their stored order,
+ * because `Array#sort` is stable.
  */
 export function sortProjects(projects: Project[]): Project[] {
   return [...projects].sort((a, b) => {
@@ -105,92 +144,81 @@ export function sortProjects(projects: Project[]): Project[] {
   });
 }
 
-export async function getProjects(): Promise<Project[]> {
+/**
+ * The whole portfolio as one object: chrome + projects + skills + stats.
+ *
+ * One cache entry, one document read. Every other getter below delegates here,
+ * so the home page's `Promise.all` still resolves from a single cached object.
+ */
+export async function getSiteData(): Promise<SiteData> {
   "use cache";
   cacheLife("hours");
-  cacheTag(contentTags.projects);
+  cacheTag(contentTags.data);
 
-  const docs = await fetchDocs("projects");
-  if (!docs || docs.length === 0) return sortProjects(staticProjects);
+  const doc = await readSiteDoc();
+  if (!doc) return staticSiteData();
 
-  const parsed = parseAll(docs, projectSchema);
-  return parsed ? sortProjects(parsed) : sortProjects(staticProjects);
+  // Pre-migration documents have no `projects`/`skillGroups`/`stats` arrays;
+  // read the legacy collections for those instead of dropping the content.
+  const projects = Array.isArray(doc.projects)
+    ? parseList(projectSchema, doc.projects, staticProjects)
+    : await legacyList("projects", projectSchema, staticProjects);
+  const skillGroups = Array.isArray(doc.skillGroups)
+    ? parseList(skillGroupSchema, doc.skillGroups, staticSkillGroups)
+    : await legacyList("skillGroups", skillGroupSchema, staticSkillGroups);
+  const stats = Array.isArray(doc.stats)
+    ? parseList(statSchema, doc.stats, staticStats)
+    : await legacyList("stats", statSchema, staticStats);
+
+  return {
+    ...buildSiteContent(doc),
+    projects: sortProjects(projects),
+    skillGroups,
+    stats,
+  };
+}
+
+export async function getProjects(): Promise<Project[]> {
+  return (await getSiteData()).projects;
 }
 
 export async function getSkillGroups(): Promise<SkillGroup[]> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(contentTags.skillGroups);
-
-  const docs = await fetchDocs("skillGroups");
-  if (!docs || docs.length === 0) return staticSkillGroups;
-
-  const parsed = parseAll(docs, skillGroupSchema);
-  return parsed ?? staticSkillGroups;
+  return (await getSiteData()).skillGroups;
 }
 
 export async function getStats(): Promise<Stat[]> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(contentTags.stats);
-
-  const docs = await fetchDocs("stats");
-  if (!docs || docs.length === 0) return staticStats;
-
-  const parsed = parseAll(docs, statSchema);
-  return parsed ?? staticStats;
+  return (await getSiteData()).stats;
 }
 
 export async function getSiteContent(): Promise<SiteContent> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(contentTags.site);
+  const { hero, about, contact, links, marquee, nav, images } = await getSiteData();
+  return { hero, about, contact, links, marquee, nav, images };
+}
 
-  const db = await connectToDatabase();
-  if (!db) return staticSiteContent();
+/* --- section builders ---------------------------------------------------------- */
 
-  try {
-    // The single editable-content document, keyed by string _id so upserts are
-    // trivial and there can never be more than one. Typed loosely so the driver
-    // accepts a string `_id` (its default is ObjectId) — the document is
-    // validated by `siteContentDocSchema` below.
-    const doc = await db
-      .collection<{ _id: string; [key: string]: unknown }>("siteContent")
-      .findOne({ _id: "main" });
-    if (!doc) return staticSiteContent();
+/** Validates each editable section independently so one bad field only loses that section. */
+function buildSiteContent(doc: RawSiteDoc): SiteContent {
+  const fallback = staticSiteContent();
 
-    const parsed = siteContentDocSchema.safeParse({
-      hero: doc.hero,
-      about: doc.about,
-      contact: doc.contact,
-      links: doc.links,
-      marquee: doc.marquee,
-      nav: doc.nav,
-      images: doc.images,
-    });
-    if (!parsed.success) return staticSiteContent();
+  const links = parseOr(siteLinksSchema, doc.links, fallback.links);
 
-    const { hero, about, contact, links, marquee, nav, images } = parsed.data;
-    return {
-      hero,
-      about,
-      // `actions` are not stored — derived from `links`, exactly like site.ts.
-      contact: buildContact(contact.heading, contact.body, links),
-      links,
-      marquee,
-      nav,
-      images: images
-        ? {
-            avatar: { ...staticProfile.avatar, ...images.avatar },
-            heroImage: { ...staticProfile.heroImage, ...images.heroImage },
-            heroBadge: images.heroBadge ?? staticProfile.heroBadge,
-            ogImage: { ...staticProfile.ogImage, ...(images.ogImage ?? {}) },
-          }
-        : staticProfile,
-    };
-  } catch {
-    return staticSiteContent();
-  }
+  const storedContact = contactContentSchema.safeParse(doc.contact);
+  const contact = storedContact.success
+    ? buildContact(storedContact.data.heading, storedContact.data.body, links)
+    : buildContact(fallback.contact.heading, fallback.contact.body, links);
+
+  const storedImages = profileImagesSchema.safeParse(doc.images);
+
+  return {
+    hero: parseOr(heroContentSchema, doc.hero, fallback.hero),
+    about: parseOr(aboutContentSchema, doc.about, fallback.about),
+    contact,
+    links,
+    marquee: parseOr(marqueeContentSchema, doc.marquee, fallback.marquee),
+    nav: parseOr(navSchema, doc.nav, fallback.nav),
+    images: storedImages.success ? mergeImages(storedImages.data) : fallback.images,
+  };
 }
 
 /* --- fallbacks ---------------------------------------------------------------- */
@@ -204,6 +232,33 @@ function staticSiteContent(): SiteContent {
     marquee: staticSite.marquee,
     nav: staticNav,
     images: staticProfile,
+  };
+}
+
+function staticSiteData(): SiteData {
+  return {
+    ...staticSiteContent(),
+    projects: sortProjects(staticProjects),
+    skillGroups: staticSkillGroups,
+    stats: staticStats,
+  };
+}
+
+/**
+ * Stored profile images may be partial (a row written before a field existed),
+ * so each asset is layered over its static default rather than replaced.
+ */
+function mergeImages(images: {
+  avatar: ProfileImages["avatar"];
+  heroImage: ProfileImages["heroImage"];
+  heroBadge: string;
+  ogImage?: ProfileImages["ogImage"];
+}): ProfileImages {
+  return {
+    avatar: { ...staticProfile.avatar, ...images.avatar },
+    heroImage: { ...staticProfile.heroImage, ...images.heroImage },
+    heroBadge: images.heroBadge ?? staticProfile.heroBadge,
+    ogImage: { ...staticProfile.ogImage, ...(images.ogImage ?? {}) },
   };
 }
 

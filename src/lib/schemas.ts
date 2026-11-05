@@ -53,7 +53,7 @@ export const aboutContentSchema = z.object({
  * Heading + body only. `actions` are not stored — the data layer rebuilds them
  * from `links` on read, the same way the static `site.ts` derives them.
  */
-const contactContentSchema = z.object({
+export const contactContentSchema = z.object({
   heading: z.string().trim().max(200),
   body: z.string().trim().max(2000),
 });
@@ -199,6 +199,19 @@ export const statSchema = z.object({
   order: z.number().int().min(0).optional(),
 });
 
+/**
+ * The single `siteContent` document (`_id: "main"`): the editable chrome plus
+ * the three content lists. This is the whole portfolio in one object.
+ *
+ * Declared after the list schemas because `.extend` runs at module load and
+ * needs `projectSchema`, `skillGroupSchema` and `statSchema` already defined.
+ */
+export const siteDataDocSchema = siteContentDocSchema.extend({
+  projects: z.array(projectSchema).default([]),
+  skillGroups: z.array(skillGroupSchema).default([]),
+  stats: z.array(statSchema).default([]),
+});
+
 /** A message submitted through the public contact form. */
 export const contactMessageInputSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(120),
@@ -218,6 +231,7 @@ export const loginInputSchema = z.object({
 });
 
 export type SiteContentDoc = z.infer<typeof siteContentDocSchema>;
+export type SiteDataDoc = z.infer<typeof siteDataDocSchema>;
 export type ProjectInput = z.infer<typeof projectSchema>;
 export type SkillGroupInput = z.infer<typeof skillGroupSchema>;
 export type StatInput = z.infer<typeof statSchema>;

@@ -289,6 +289,20 @@ export type SiteContent = {
   images: ProfileImages;
 };
 
+/**
+ * Everything the public site reads, as one object.
+ *
+ * Stored as a single `siteContent` document (`_id: "main"`) — the editable
+ * chrome plus the three content lists. `getSiteData()` is the only reader, and
+ * the per-section getters (`getProjects`, `getSkillGroups`, `getStats`,
+ * `getSiteContent`) are thin views over it so existing pages keep working.
+ */
+export type SiteData = SiteContent & {
+  projects: Project[];
+  skillGroups: SkillGroup[];
+  stats: Stat[];
+};
+
 /** A message sent through the contact form, stored in the `messages` collection. */
 export type ContactMessage = {
   name: string;
