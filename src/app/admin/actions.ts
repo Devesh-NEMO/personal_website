@@ -59,12 +59,13 @@ function toMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong.";
 }
 
-/** Invalidate the public pages after a content change. */
+/** Invalidate the public and admin pages after a content change. */
 function refreshPublicContent(): void {
   updateTag(contentTags.data);
   revalidatePath("/");
   // The all-projects page shares the same data, so it is refreshed too.
   revalidatePath("/work");
+  revalidatePath("/admin", "layout");
 }
 
 /* --- auth -------------------------------------------------------------------- */
