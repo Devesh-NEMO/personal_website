@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Devesh Kumar — CV</title>
+    <style>
+      /* ------------------------------------------------------------------
+         Print-only CV. Same palette and hard-edged geometry as the site
+         (cream page, ink borders, offset shadows, orange accent), but laid
+         out for A4 rather than the screen.
+
+         Generate with: npm run cv
+         ------------------------------------------------------------------ */
+
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg: #fff3d6;
+        --surface: #ffffff;
+        --ink: #1b1b1b;
+        --muted: #55504a;
+        --accent: #ff5c39;
+        --mint: #a8e6cf;
+        --peach: #ffd3b6;
+        --periwinkle: #aeb9ef;
+        --pink: #ffaaa5;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        width: 210mm;
+        height: 297mm;
+        padding: 11mm;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 9.2pt;
+        line-height: 1.45;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* --- header ------------------------------------------------------ */
+
+      header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 8mm;
+        padding-bottom: 4mm;
+        border-bottom: 2.5pt solid var(--ink);
+      }
+
+      .mark {
+        display: inline-block;
+        margin-bottom: 2.5mm;
+        padding: 1mm 2.5mm;
+        background: var(--accent);
+        border: 2pt solid var(--ink);
+        box-shadow: 2.5pt 2.5pt 0 var(--ink);
+        font-size: 10pt;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 28pt;
+        line-height: 0.95;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .role {
+        margin-top: 2mm;
+        font-size: 10pt;
+        font-weight: 700;
+        color: var(--muted);
+        letter-spacing: 0.01em;
+      }
+
+      .contact {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 1.2mm;
+        font-size: 8.2pt;
+        white-space: nowrap;
+      }
+
+      .contact span {
+        display: inline-flex;
+        align-items: center;
+        gap: 1.5mm;
+      }
+
+      .contact b {
+        display: inline-block;
+        width: 3mm;
+        height: 3mm;
+        border: 1.2pt solid var(--ink);
+        background: var(--mint);
+      }
+
+      .contact span:nth-child(2) b {
+        background: var(--peach);
+      }
+
+      .contact span:nth-child(3) b {
+        background: var(--periwinkle);
+      }
+
+      /* --- layout ------------------------------------------------------ */
+
+      main {
+        display: grid;
+        grid-template-columns: 1fr 57mm;
+        gap: 7mm;
+        margin-top: 5mm;
+      }
+
+      h2 {
+        margin: 0 0 2.5mm;
+        font-size: 9.5pt;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h2::after {
+        content: "";
+        display: block;
+        width: 9mm;
+        height: 2pt;
+        margin-top: 1.4mm;
+        background: var(--accent);
+      }
+
+      section + section {
+        margin-top: 4.5mm;
+      }
+
+      p {
+        margin: 0 0 2mm;
+        color: #2b2825;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      .lede {
+        font-size: 10.4pt;
+      }
+
+      /* --- how i work --------------------------------------------------- */
+
+      .principles {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .principles li {
+        position: relative;
+        margin-bottom: 2mm;
+        padding-left: 6mm;
+      }
+
+      .principles li:last-child {
+        margin-bottom: 0;
+      }
+
+      .principles li::before {
+        content: "";
+        position: absolute;
+        top: 1.3mm;
+        left: 0;
+        width: 2.6mm;
+        height: 2.6mm;
+        background: var(--accent);
+        border: 1pt solid var(--ink);
+      }
+
+      .principles strong {
+        font-weight: 800;
+      }
+
+      /* --- selected work ----------------------------------------------- */
+
+      .job {
+        padding: 2.6mm 3mm;
+        background: var(--surface);
+        border: 1.6pt solid var(--ink);
+        box-shadow: 2.5pt 2.5pt 0 var(--ink);
+      }
+
+      .job + .job {
+        margin-top: 3.5mm;
+      }
+
+      .job-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 3mm;
+      }
+
+      .job h3 {
+        margin: 0;
+        font-size: 10pt;
+        font-weight: 800;
+      }
+
+      .job h3 a {
+        border-bottom: 1pt solid var(--accent);
+      }
+
+      .job .stack {
+        font-size: 7.4pt;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .job ul {
+        margin: 1.6mm 0 0;
+        padding-left: 3.6mm;
+      }
+
+      .job li {
+        margin-bottom: 0.8mm;
+      }
+
+      .job li::marker {
+        color: var(--accent);
+      }
+
+      /* --- sidebar ----------------------------------------------------- */
+
+      aside > section + section {
+        margin-top: 5mm;
+      }
+
+      .skill-group + .skill-group {
+        margin-top: 2.6mm;
+      }
+
+      .skill-group h3 {
+        margin: 0 0 1.2mm;
+        font-size: 7.6pt;
+        font-weight: 800;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.2mm;
+      }
+
+      .tags span {
+        padding: 0.6mm 1.8mm;
+        background: var(--surface);
+        border: 1pt solid var(--ink);
+        font-size: 7.4pt;
+        font-weight: 600;
+      }
+
+      .tags span:nth-child(4n + 1) {
+        background: var(--mint);
+      }
+
+      .tags span:nth-child(4n + 2) {
+        background: var(--peach);
+      }
+
+      .tags span:nth-child(4n + 3) {
+        background: var(--periwinkle);
+      }
+
+      .tags span:nth-child(4n) {
+        background: var(--pink);
+      }
+
+      /* --- numbers ----------------------------------------------------- */
+
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2mm;
+      }
+
+      .stat {
+        padding: 2mm;
+        background: var(--surface);
+        border: 1.4pt solid var(--ink);
+        text-align: center;
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 14pt;
+        line-height: 1.1;
+        font-weight: 800;
+      }
+
+      .stat small {
+        display: block;
+        margin-top: 0.6mm;
+        font-size: 6.6pt;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      /* --- footer ------------------------------------------------------ */
+
+      footer {
+        position: absolute;
+        right: 11mm;
+        bottom: 7mm;
+        left: 11mm;
+        display: flex;
+        justify-content: space-between;
+        padding-top: 2.5mm;
+        border-top: 1.4pt solid var(--ink);
+        font-size: 7pt;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <div>
+        <div class="mark">DK.</div>
+        <h1>Devesh Kumar</h1>
+        <div class="role">Data Analyst · Data Scientist</div>
+      </div>
+
+      <div class="contact">
+        <span><b></b>devesh10607@gmail.com</span>
+        <span><b></b>linkedin.com/in/dk2002</span>
+        <span><b></b>github.com/Devesh-NEMO</span>
+      </div>
+    </header>
+
+    <main>
+      <div>
+        <section>
+          <h2>Profile</h2>
+          <p class="lede">
+            Data analyst and data scientist turning messy raw data into clear,
+            decision-ready dashboards, models and stories.
+          </p>
+          <p>
+            I clean up messy tables, build models people can trust, and design
+            dashboards that answer the question before it gets asked. Most of my
+            work sits in the unglamorous part of the job: reconciling exports
+            that disagree, fixing the definitions nobody wrote down, and
+            rebuilding the metrics layer so the numbers mean the same thing on
+            Monday as they did on Friday.
+          </p>
+          <p>
+            The rest is where it gets fun — modelling demand, sizing
+            experiments, and shipping dashboards that get used daily instead of
+            admired once. I care about clean data contracts, reproducible
+            queries, and charts a stakeholder can read in five seconds without
+            me in the room.
+          </p>
+        </section>
+
+        <section>
+          <h2>Selected Work</h2>
+
+          <article class="job">
+            <div class="job-head">
+              <h3><a href="https://datalens-raz8.vercel.app/">Datelens</a></h3>
+              <div class="stack">Python · FastAPI · TypeScript</div>
+            </div>
+            <ul>
+              <li>
+                Data exploration app that gives a single overview of a dataset
+                instead of a folder of exports.
+              </li>
+              <li>
+                Python and FastAPI backend with a TypeScript front end, built and
+                deployed on Vercel.
+              </li>
+            </ul>
+          </article>
+
+          <article class="job">
+            <div class="job-head">
+              <h3>
+                <a href="https://pixel-forge-iota-ashen.vercel.app/">PixelForge</a>
+              </h3>
+              <div class="stack">Node.js · TypeScript</div>
+            </div>
+            <ul>
+              <li>
+                Image conversion tool that exports an uploaded image in the
+                format you need.
+              </li>
+              <li>
+                TypeScript service handling upload, conversion and download end
+                to end.
+              </li>
+            </ul>
+          </article>
+        </section>
+
+        <section>
+          <h2>How I Work</h2>
+          <ul class="principles">
+            <li>
+              <strong>Definitions first.</strong> One documented metric layer
+              beats five exports that disagree.
+            </li>
+            <li>
+              <strong>Reproducible by default.</strong> Versioned queries and
+              data contracts, so a number can always be traced back.
+            </li>
+            <li>
+              <strong>Built to be read.</strong> A dashboard should answer the
+              question in five seconds, without me in the room.
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Focus</h2>
+          <p>
+            Retail, product and marketing analytics: demand forecasting,
+            experiment sizing, and the metrics layer underneath both. Open to
+            analyst and data scientist roles.
+          </p>
+        </section>
+      </div>
+
+      <aside>
+        <section>
+          <h2>Skills</h2>
+
+          <div class="skill-group">
+            <h3>Data &amp; Databases</h3>
+            <div class="tags">
+              <span>SQL</span><span>Python</span><span>PostgreSQL</span>
+              <span>BigQuery</span><span>Snowflake</span><span>dbt</span>
+              <span>Airflow</span><span>Spark</span><span>Excel</span>
+            </div>
+          </div>
+
+          <div class="skill-group">
+            <h3>Programming</h3>
+            <div class="tags">
+              <span>pandas</span><span>NumPy</span><span>scikit-learn</span>
+              <span>statsmodels</span><span>Polars</span><span>FastAPI</span>
+              <span>Docker</span><span>SQLAlchemy</span>
+            </div>
+          </div>
+
+          <div class="skill-group">
+            <h3>Visualization</h3>
+            <div class="tags">
+              <span>Tableau</span><span>Power BI</span><span>Looker</span>
+              <span>Plotly</span><span>Streamlit</span><span>Metabase</span>
+            </div>
+          </div>
+
+          <div class="skill-group">
+            <h3>Other</h3>
+            <div class="tags">
+              <span>Statistics</span><span>A/B Testing</span>
+              <span>Forecasting</span><span>dbt Metrics</span><span>Git</span>
+              <span>Agile</span>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>By the numbers</h2>
+          <div class="stats">
+            <div class="stat"><strong>40+</strong><small>Projects</small></div>
+            <div class="stat"><strong>18</strong><small>Dashboards</small></div>
+            <div class="stat"><strong>2.4B</strong><small>Rows analysed</small></div>
+            <div class="stat"><strong>12</strong><small>Daily tools</small></div>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <footer>
+      <span>Devesh Kumar — CV</span>
+      <span>devesh10607@gmail.com</span>
+    </footer>
+  </body>
+</html>

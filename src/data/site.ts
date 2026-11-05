@@ -30,7 +30,7 @@ const links: SiteLinks = {
    * offer a Download CV entry at all, so an empty string removes the row rather
    * than rendering a link that 404s.
    */
-  cv: "",
+  cv: "/cv.pdf",
 };
 
 export const site: SiteProfile = {

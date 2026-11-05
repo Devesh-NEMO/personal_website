@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "cv": "node scripts/make-cv.mjs",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "migrate": "tsx --env-file=.env.local scripts/migrate-to-single-doc.ts",
     "hash-password": "node scripts/hash-password.mjs",
