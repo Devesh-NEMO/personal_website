@@ -1,22 +1,12 @@
 /**
- * `npm run migrate` — one-time move from the separate collections
- * (`projects`, `skillGroups`, `stats`) into the single `siteContent` document
- * (`_id: "main"`).
- *
- * Safe to run more than once:
- *   - a list already present on the document (even an empty one) is left alone,
- *     so a project deleted in the admin is never resurrected;
- *   - a missing list is filled from the legacy collection;
- *   - the old collections are NOT dropped — they are left in place as a backup.
- *
- * Requires MONGODB_URI in .env.local.
+ * `npm run migrate` — moves content into the single `siteContent` document
+ * (`_id: "main"`), wrapping everything inside the `siteData` object.
  */
 
 import { connectToDatabase, disconnect } from "../src/lib/mongodb";
 
 type RawDoc = Record<string, unknown>;
 
-/** Drops Mongo bookkeeping so the embedded entries match the public types. */
 function clean(docs: RawDoc[]): RawDoc[] {
   return docs.map((doc) => {
     const copy = { ...doc };
@@ -39,26 +29,43 @@ async function main() {
   const existing = await siteColl.findOne({ _id: "main" });
 
   const [legacyProjects, legacySkills, legacyStats] = await Promise.all([
-    db.collection("projects").find({}).sort({ order: 1 }).toArray(),
-    db.collection("skillGroups").find({}).sort({ order: 1 }).toArray(),
-    db.collection("stats").find({}).sort({ order: 1 }).toArray(),
+    db.collection("projects").find({}).sort({ order: 1 }).toArray().catch(() => []),
+    db.collection("skillGroups").find({}).sort({ order: 1 }).toArray().catch(() => []),
+    db.collection("stats").find({}).sort({ order: 1 }).toArray().catch(() => []),
   ]);
 
-  const projects = Array.isArray(existing?.projects)
-    ? (existing.projects as RawDoc[])
+  const rawExisting = (existing?.siteData && typeof existing.siteData === "object") ? (existing.siteData as RawDoc) : existing;
+
+  const projects = Array.isArray(rawExisting?.projects)
+    ? (rawExisting.projects as RawDoc[])
     : clean(legacyProjects as RawDoc[]);
-  const skillGroups = Array.isArray(existing?.skillGroups)
-    ? (existing.skillGroups as RawDoc[])
+  const skillGroups = Array.isArray(rawExisting?.skillGroups)
+    ? (rawExisting.skillGroups as RawDoc[])
     : clean(legacySkills as RawDoc[]);
-  const stats = Array.isArray(existing?.stats)
-    ? (existing.stats as RawDoc[])
+  const stats = Array.isArray(rawExisting?.stats)
+    ? (rawExisting.stats as RawDoc[])
     : clean(legacyStats as RawDoc[]);
+
+  const baseSiteData = (existing?.siteData && typeof existing.siteData === "object") ? (existing.siteData as RawDoc) : (existing || {});
+  // remove top-level projects/skillGroups/stats from baseSiteData if they were flat
+  delete baseSiteData._id;
+  delete baseSiteData.createdAt;
+  delete baseSiteData.updatedAt;
+  delete baseSiteData.siteData;
 
   const now = new Date();
   await siteColl.updateOne(
     { _id: "main" },
     {
-      $set: { projects, skillGroups, stats, updatedAt: now },
+      $set: {
+        siteData: {
+          ...baseSiteData,
+          projects,
+          skillGroups,
+          stats,
+        },
+        updatedAt: now,
+      },
       $setOnInsert: { _id: "main", createdAt: now },
     },
     { upsert: true },
@@ -66,13 +73,10 @@ async function main() {
 
   await disconnect();
 
-  console.log("\nMigrated into the single siteContent document:");
+  console.log("\nMigrated into siteContent under the siteData object:");
   console.log(`  - projects: ${projects.length}`);
   console.log(`  - skillGroups: ${skillGroups.length}`);
   console.log(`  - stats: ${stats.length}`);
-  console.log(
-    "\nThe old collections were left in place as a backup. Drop them once the site is verified.",
-  );
 }
 
 main()

@@ -200,16 +200,15 @@ export const statSchema = z.object({
 });
 
 /**
- * The single `siteContent` document (`_id: "main"`): the editable chrome plus
- * the three content lists. This is the whole portfolio in one object.
- *
- * Declared after the list schemas because `.extend` runs at module load and
- * needs `projectSchema`, `skillGroupSchema` and `statSchema` already defined.
+ * The single `siteContent` document (`_id: "main"`): contains `siteData`
+ * which holds the editable chrome plus the three content lists.
  */
-export const siteDataDocSchema = siteContentDocSchema.extend({
-  projects: z.array(projectSchema).default([]),
-  skillGroups: z.array(skillGroupSchema).default([]),
-  stats: z.array(statSchema).default([]),
+export const siteDataDocSchema = z.object({
+  siteData: siteContentDocSchema.extend({
+    projects: z.array(projectSchema).default([]),
+    skillGroups: z.array(skillGroupSchema).default([]),
+    stats: z.array(statSchema).default([]),
+  }),
 });
 
 /** A message submitted through the public contact form. */

@@ -158,20 +158,20 @@ export async function getSiteData(): Promise<SiteData> {
   const doc = await readSiteDoc();
   if (!doc) return staticSiteData();
 
-  // Pre-migration documents have no `projects`/`skillGroups`/`stats` arrays;
-  // read the legacy collections for those instead of dropping the content.
-  const projects = Array.isArray(doc.projects)
-    ? parseList(projectSchema, doc.projects, staticProjects)
+  const raw = (doc.siteData && typeof doc.siteData === "object") ? (doc.siteData as Record<string, unknown>) : doc;
+
+  const projects = Array.isArray(raw.projects)
+    ? parseList(projectSchema, raw.projects, staticProjects)
     : await legacyList("projects", projectSchema, staticProjects);
-  const skillGroups = Array.isArray(doc.skillGroups)
-    ? parseList(skillGroupSchema, doc.skillGroups, staticSkillGroups)
+  const skillGroups = Array.isArray(raw.skillGroups)
+    ? parseList(skillGroupSchema, raw.skillGroups, staticSkillGroups)
     : await legacyList("skillGroups", skillGroupSchema, staticSkillGroups);
-  const stats = Array.isArray(doc.stats)
-    ? parseList(statSchema, doc.stats, staticStats)
+  const stats = Array.isArray(raw.stats)
+    ? parseList(statSchema, raw.stats, staticStats)
     : await legacyList("stats", statSchema, staticStats);
 
   return {
-    ...buildSiteContent(doc),
+    ...buildSiteContent(raw),
     projects: sortProjects(projects),
     skillGroups,
     stats,
@@ -198,7 +198,7 @@ export async function getSiteContent(): Promise<SiteContent> {
 /* --- section builders ---------------------------------------------------------- */
 
 /** Validates each editable section independently so one bad field only loses that section. */
-function buildSiteContent(doc: RawSiteDoc): SiteContent {
+function buildSiteContent(doc: Record<string, unknown>): SiteContent {
   const fallback = staticSiteContent();
 
   const links = parseOr(siteLinksSchema, doc.links, fallback.links);

@@ -72,10 +72,14 @@ async function readSiteDoc(db: Db): Promise<SiteDoc | null> {
  */
 async function writeSiteDoc(db: Db, fields: Record<string, unknown>): Promise<void> {
   const now = new Date();
+  const setFields: Record<string, unknown> = { updatedAt: now };
+  for (const [key, value] of Object.entries(fields)) {
+    setFields[`siteData.${key}`] = value;
+  }
   await siteCollection(db).updateOne(
     { _id: "main" },
     {
-      $set: { ...fields, updatedAt: now },
+      $set: setFields,
       $setOnInsert: { _id: "main", createdAt: now },
     },
     { upsert: true },
@@ -84,7 +88,8 @@ async function writeSiteDoc(db: Db, fields: Record<string, unknown>): Promise<vo
 
 /** Reads a stored list, tolerating a document written before the list existed. */
 function readList<T>(doc: SiteDoc | null, key: string): T[] {
-  const value = doc?.[key];
+  const raw = (doc?.siteData && typeof doc.siteData === "object") ? (doc.siteData as Record<string, unknown>) : doc;
+  const value = raw?.[key];
   return Array.isArray(value) ? ([...value] as T[]) : [];
 }
 
@@ -289,12 +294,13 @@ export async function getCounts(): Promise<{
       db.collection("messages").countDocuments({ read: false }),
     ]);
 
+    const raw = (doc?.siteData && typeof doc.siteData === "object") ? (doc.siteData as Record<string, unknown>) : doc;
     const size = (value: unknown) => (Array.isArray(value) ? value.length : 0);
 
     return {
-      projects: size(doc?.projects),
-      skills: size(doc?.skillGroups),
-      stats: size(doc?.stats),
+      projects: size(raw?.projects),
+      skills: size(raw?.skillGroups),
+      stats: size(raw?.stats),
       messages,
       unread,
       connected: true,

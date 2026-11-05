@@ -35,8 +35,9 @@ async function main() {
   const existing = await siteColl.findOne({ _id: "main" });
 
   // Never resurrect an empty static list over live database work.
-  const storedProjects = Array.isArray(existing?.projects)
-    ? (existing.projects as Project[])
+  const rawExisting = (existing?.siteData && typeof existing.siteData === "object") ? (existing.siteData as Record<string, unknown>) : existing;
+  const storedProjects = Array.isArray(rawExisting?.projects)
+    ? (rawExisting.projects as Project[])
     : [];
   const nextProjects =
     projects.length > 0
@@ -55,16 +56,18 @@ async function main() {
     { _id: "main" },
     {
       $set: {
-        hero: site.hero,
-        about: site.about,
-        contact: { heading: site.contact.heading, body: site.contact.body },
-        links: site.links,
-        marquee: site.marquee,
-        nav,
-        images: profile,
-        projects: nextProjects,
-        skillGroups: nextSkills,
-        stats: nextStats,
+        siteData: {
+          hero: site.hero,
+          about: site.about,
+          contact: { heading: site.contact.heading, body: site.contact.body },
+          links: site.links,
+          marquee: site.marquee,
+          nav,
+          images: profile,
+          projects: nextProjects,
+          skillGroups: nextSkills,
+          stats: nextStats,
+        },
         updatedAt: now,
       },
       $setOnInsert: { _id: "main", createdAt: now },

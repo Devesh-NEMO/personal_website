@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 
 /**
  * ============================================================================
@@ -90,6 +91,7 @@ export async function destroySession(): Promise<void> {
 
 /** The current session payload, or null when absent/invalid/expired. */
 export async function getSession(): Promise<{ email: string } | null> {
+  await connection();
   const secret = getSecret();
 
   // Always read the cookie jar, before any early return. `cookies()` is a
