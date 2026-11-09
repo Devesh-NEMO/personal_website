@@ -62,6 +62,7 @@ export const site: SiteProfile = {
   about: {
     paragraphs: [
       "I'm a frontend developer with a bias for shipping. I've built product interfaces, dashboards and marketing sites end to end — from design handoff to production deploy — usually with React, Next.js and TypeScript. The part I enjoy most is the unglamorous polish: the empty state, the focus ring, and the layout that doesn't jump when the data finally loads.",
+      "I recently completed a six-month paid Frontend Internship at Vidyaone IT Solution (Nov 2025 – May 2026). There I built responsive user interfaces with React.js, HTML, CSS and Tailwind CSS, turned designs into reusable components, and connected the frontend to APIs so dynamic data rendered correctly. I also fixed UI bugs and worked closely with the team to finish tasks on time — which taught me how real product work gets reviewed, refined and released.",
       "I care about the details users feel but rarely name: fast first paint, accessible components, responsive layouts that hold up on a 390px screen, and a codebase the next developer can read. I test in the browser, measure what I ship, and keep the design system honest so the tenth page is as consistent as the first.",
     ],
   },
