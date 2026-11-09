@@ -257,6 +257,8 @@ export type HeroContent = {
   intro: string;
   primaryAction: ActionLink;
   secondaryAction: ActionLink;
+  /** Optional third action, typically for resume/CV download */
+  tertiaryAction?: ActionLink;
 };
 
 export type AboutContent = {

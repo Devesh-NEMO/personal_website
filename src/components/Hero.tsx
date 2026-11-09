@@ -95,6 +95,16 @@ export function Hero({
               <Button href={hero.secondaryAction.href} variant="secondary">
                 {hero.secondaryAction.label}
               </Button>
+              {hero.tertiaryAction ? (
+                <Button 
+                  href={hero.tertiaryAction.href} 
+                  variant="secondary"
+                  external={hero.tertiaryAction.external}
+                  ariaLabel={hero.tertiaryAction.ariaLabel}
+                >
+                  {hero.tertiaryAction.label}
+                </Button>
+              ) : null}
             </div>
           </Reveal>
         </div>
