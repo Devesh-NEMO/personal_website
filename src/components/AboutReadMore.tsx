@@ -22,7 +22,8 @@ export function AboutReadMore({ paragraphs }: { paragraphs: string[] }) {
         id={regionId}
         className={[
           "flex flex-col gap-4 text-base leading-relaxed font-medium tracking-tight sm:text-lg",
-          "overflow-y-scroll overscroll-contain pr-3 touch-pan-y transition-all duration-300",
+          "overflow-y-scroll overscroll-none pr-3 touch-pan-y transition-all duration-300",
+          "isolate will-change-scroll",
           "[scrollbar-width:auto]",
           "[scrollbar-color:var(--fg)_var(--surface)]",
           "[&::-webkit-scrollbar]:w-3",
@@ -31,6 +32,17 @@ export function AboutReadMore({ paragraphs }: { paragraphs: string[] }) {
           "[&::-webkit-scrollbar-thumb]:hover:bg-accent",
           expanded ? "h-60 sm:h-72" : "h-32 sm:h-36",
         ].join(" ")}
+        onWheel={(e) => {
+          const element = e.currentTarget;
+          const atTop = element.scrollTop === 0;
+          const atBottom = element.scrollHeight - element.scrollTop === element.clientHeight;
+          
+          if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) {
+            return;
+          }
+          
+          e.stopPropagation();
+        }}
       >
         {paragraphs.map((paragraph, index) => (
           <p key={`${index}-${paragraph.slice(0, 24)}`}>{paragraph}</p>
