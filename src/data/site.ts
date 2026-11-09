@@ -54,7 +54,7 @@ export const site: SiteProfile = {
     preHighlight: "I build",
     highlight: "the web.",
     intro:
-      "I'm a frontend developer who turns designs into fast, accessible, pixel-perfect interfaces. I work mostly in React, Next.js and TypeScript — and I care as much about the loading state as the final screen.",
+      " a frontend developer who turns designs into fast, accessible, pixel-perfect interfaces. I work mostly in React, Next.js and TypeScript — and I care as much about the loading state as the final screen.",
     primaryAction: { label: "See my work", href: "#work" },
     secondaryAction: { label: "Get in touch", href: "#contact" },
     tertiaryAction: { label: "Download Resume", href: "/cv.pdf", external: true },

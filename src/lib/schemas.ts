@@ -43,6 +43,7 @@ export const heroContentSchema = z.object({
   intro: z.string().trim().max(600),
   primaryAction: actionLinkSchema,
   secondaryAction: actionLinkSchema,
+  tertiaryAction: actionLinkSchema.optional(),
 });
 
 export const aboutContentSchema = z.object({
