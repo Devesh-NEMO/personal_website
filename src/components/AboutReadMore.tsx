@@ -7,11 +7,10 @@ import { Button } from "@/components/ui/Button";
 /**
  * The long-form bio, collapsed behind a "Read more" disclosure.
  *
- * Collapsed it shows only the first paragraph, so the About section keeps a
- * predictable height no matter how much copy is stored. Expanded, every
- * paragraph sits inside a fixed-height scroll area: the card grows to a
- * comfortable ceiling and the copy scrolls internally instead of stretching
- * the page.
+ * The paragraph area has the same fixed height in both states, so clicking
+ * "Read more" never resizes the card or shifts the page. Collapsed it shows
+ * the first paragraph; expanded the remaining paragraphs are revealed inside
+ * that same box and reached by scrolling it internally.
  */
 export function AboutReadMore({ paragraphs }: { paragraphs: string[] }) {
   const [expanded, setExpanded] = useState(false);
@@ -23,12 +22,7 @@ export function AboutReadMore({ paragraphs }: { paragraphs: string[] }) {
     <div className="flex flex-col gap-5">
       <div
         id={regionId}
-        className={[
-          "flex flex-col gap-4 text-base leading-relaxed font-medium tracking-tight sm:text-lg",
-          expanded
-            ? "max-h-80 overflow-y-auto overscroll-contain pr-2"
-            : "",
-        ].join(" ")}
+        className="flex h-56 flex-col gap-4 overflow-y-auto overscroll-contain pr-2 text-base leading-relaxed font-medium tracking-tight touch-pan-y [scrollbar-color:var(--fg)_transparent] [scrollbar-width:thin] sm:h-60 sm:text-lg"
       >
         {visible.map((paragraph, index) => (
           <p key={`${index}-${paragraph.slice(0, 24)}`}>{paragraph}</p>
