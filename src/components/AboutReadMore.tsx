@@ -23,8 +23,12 @@ export function AboutReadMore({ paragraphs }: { paragraphs: string[] }) {
         className={[
           "flex flex-col gap-4 text-base leading-relaxed font-medium tracking-tight sm:text-lg",
           "overflow-y-scroll overscroll-contain pr-3 touch-pan-y transition-all duration-300",
-          "[scrollbar-color:var(--fg)_var(--bg)] [scrollbar-width:thin]",
-          "[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-bg [&::-webkit-scrollbar-thumb]:bg-fg [&::-webkit-scrollbar-thumb]:rounded-full",
+          "[scrollbar-width:auto]",
+          "[scrollbar-color:var(--fg)_var(--surface)]",
+          "[&::-webkit-scrollbar]:w-3",
+          "[&::-webkit-scrollbar-track]:bg-surface [&::-webkit-scrollbar-track]:border [&::-webkit-scrollbar-track]:border-fg/20",
+          "[&::-webkit-scrollbar-thumb]:bg-fg [&::-webkit-scrollbar-thumb]:border [&::-webkit-scrollbar-thumb]:border-fg [&::-webkit-scrollbar-thumb]:rounded-md",
+          "[&::-webkit-scrollbar-thumb]:hover:bg-accent",
           expanded ? "h-60 sm:h-72" : "h-32 sm:h-36",
         ].join(" ")}
       >
