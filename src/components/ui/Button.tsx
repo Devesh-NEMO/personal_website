@@ -15,6 +15,10 @@ type ButtonProps = {
   disabled?: boolean;
   /** Focuses the button on mount (e.g. a dialog's default action). */
   autoFocus?: boolean;
+  /** Disclosure state, forwarded to the rendered <button>. */
+  ariaExpanded?: boolean;
+  /** Id of the region a disclosure button controls. */
+  ariaControls?: string;
 };
 
 /** Visual styling for a single button variant. */
@@ -49,6 +53,8 @@ export function Button({
   type = "button",
   disabled = false,
   autoFocus = false,
+  ariaExpanded,
+  ariaControls,
 }: ButtonProps & Partial<Pick<ActionLink, "href" | "external" | "ariaLabel">>) {
   const classes = cn(
     base,
@@ -67,6 +73,8 @@ export function Button({
         autoFocus={autoFocus}
         className={classes}
         aria-label={ariaLabel}
+        aria-expanded={ariaExpanded}
+        aria-controls={ariaControls}
       >
         {children}
       </button>

@@ -1,3 +1,4 @@
+import { AboutReadMore } from "@/components/AboutReadMore";
 import { ProfileImage } from "@/components/ProfileImage";
 import { Reveal } from "@/components/ui/Reveal";
 import { Section } from "@/components/Section";
@@ -138,11 +139,7 @@ export function About({
                   </h3>
                 </div>
 
-                <div className="flex flex-col gap-4 text-base leading-relaxed font-medium tracking-tight sm:text-lg">
-                  {rest.map((paragraph, index) => (
-                    <p key={paragraph.slice(0, 24)}>{paragraph}</p>
-                  ))}
-                </div>
+                <AboutReadMore paragraphs={rest} />
               </div>
             </Reveal>
           ) : null}
