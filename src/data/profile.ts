@@ -18,7 +18,7 @@ import type { ProfileImages, ProfileNav } from "@/types";
 export const profile: ProfileImages = {
   avatar: {
     src: "/images/about-image.jpg",
-    alt: "Devesh Kumar at work, reviewing a data dashboard on a laptop",
+    alt: "Devesh Kumar, frontend developer, working on a web interface",
     width: 800,
     height: 800,
     tone: "periwinkle",
@@ -27,7 +27,7 @@ export const profile: ProfileImages = {
 
   heroImage: {
     src: "/images/main.jpg",
-    alt: "Devesh Kumar at work, reviewing a data dashboard on a laptop",
+    alt: "Devesh Kumar, frontend developer, working on a web interface",
     width: 600,
     height: 600,
     tone: "mint",
@@ -38,7 +38,7 @@ export const profile: ProfileImages = {
 
   ogImage: {
     src: "/images/og-image.png",
-    alt: "Devesh Kumar — Data Analyst & Data Scientist",
+    alt: "Devesh Kumar — Frontend Developer",
     width: 1200,
     height: 630,
   },

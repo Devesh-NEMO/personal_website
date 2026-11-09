@@ -38,31 +38,31 @@ export const site: SiteProfile = {
   // so the sitemap, robots.txt and OG image URLs are correct in production.
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://your-domain.com",
 
-  title: "Devesh Kumar — Data Analyst & Data Scientist",
+  title: "Devesh Kumar — Frontend Developer",
   shortTitle: "DK",
   description:
-    "Data analyst and data scientist turning messy raw data into clear, decision-ready dashboards, models and stories.",
-  role: "Data Analyst · Data Scientist",
+    "Frontend developer building fast, accessible, pixel-perfect web interfaces with React, Next.js and TypeScript.",
+  role: "Frontend Developer",
   locale: "en_US",
 
   links,
 
   hero: {
-    eyebrow: "Data Analyst · Data Scientist",
+    eyebrow: "Frontend Developer",
     greeting: "Hi, I'm",
     name: "Devesh Kumar.",
-    preHighlight: "I make data",
-    highlight: "talk.",
+    preHighlight: "I build",
+    highlight: "the web.",
     intro:
-      "I clean up messy tables, build models people can trust, and design dashboards that answer the question before it gets asked. Currently turning retail and product data into decisions.",
+      "I'm a frontend developer who turns designs into fast, accessible, pixel-perfect interfaces. I work mostly in React, Next.js and TypeScript — and I care as much about the loading state as the final screen.",
     primaryAction: { label: "See my work", href: "#work" },
     secondaryAction: { label: "Get in touch", href: "#contact" },
   },
 
   about: {
     paragraphs: [
-      "I'm a data analyst and data scientist with a bias for shipping. Over the last few years I've worked across retail, product and marketing teams — mostly on the unglamorous part of the job: reconciling five exports that disagree, fixing the definitions nobody wrote down, and rebuilding the metrics layer so the numbers finally mean the same thing on Monday as they did on Friday.",
-      "The rest is where it gets fun. I model demand, size experiments, and build dashboards that get used daily instead of admired once. I care about clean data contracts, reproducible queries, and charts that a stakeholder can read in five seconds without me in the room to explain them.",
+      "I'm a frontend developer with a bias for shipping. I've built product interfaces, dashboards and marketing sites end to end — from design handoff to production deploy — usually with React, Next.js and TypeScript. The part I enjoy most is the unglamorous polish: the empty state, the focus ring, and the layout that doesn't jump when the data finally loads.",
+      "I care about the details users feel but rarely name: fast first paint, accessible components, responsive layouts that hold up on a 390px screen, and a codebase the next developer can read. I test in the browser, measure what I ship, and keep the design system honest so the tenth page is as consistent as the first.",
     ],
   },
 
@@ -71,8 +71,8 @@ export const site: SiteProfile = {
    * command menu can never point at different addresses.
    */
   contact: {
-    heading: "Let's make your data talk",
-    body: "Have a dataset nobody trusts, a dashboard that needs a rebuild, or a model that's overdue? Tell me about it — I reply within a day or two.",
+    heading: "Let's build something people enjoy using",
+    body: "Have a design that needs to become a real interface, a frontend that needs cleaning up, or a product that should feel faster? Tell me about it — I reply within a day or two.",
     actions: [
       {
         label: "Email",
@@ -99,7 +99,7 @@ export const site: SiteProfile = {
   // Keep the list long enough to fill the loop — see REPEATS in
   // components/background/Marquee.tsx.
   marquee: {
-    items: ["SQL", "PYTHON", "POWER BI", "EXCEL", "STATISTICS"],
+    items: ["REACT", "NEXT.JS", "TYPESCRIPT", "TAILWIND CSS", "NODE.JS"],
     separator: "✦",
   },
 
@@ -110,8 +110,8 @@ export const site: SiteProfile = {
    * ======================================================================== */
 
   notFound: {
-    title: "This data point is missing.",
-    body: "Looks like this row was dropped during cleaning. Let's get you back to clean data.",
+    title: "This page didn't render.",
+    body: "Looks like this route slipped through the build. Let's get you back to a working page.",
     // "Back to home" leads: a lost visitor wants the way out, not the shop.
     primaryAction: { label: "Back to home", href: "/" },
     secondaryAction: { label: "See my work", href: "/#work" },
@@ -134,7 +134,7 @@ export const site: SiteProfile = {
    * ======================================================================== */
 
   errorPage: {
-    title: "Something broke in the pipeline",
+    title: "Something broke in the build",
     body: "An unexpected error stopped this part of the page from rendering. Retrying usually clears it — if it doesn't, the full error is in the browser console.",
     retryLabel: "Try again",
     homeAction: { label: "Back to home", href: "/" },
@@ -146,7 +146,7 @@ export const site: SiteProfile = {
 
   splash: {
     storageKey: "dk-splash-seen",
-    messages: ["loading rows...", "cleaning data...", "ready."],
+    messages: ["compiling components...", "hydrating...", "ready."],
   },
 
   /* ==========================================================================

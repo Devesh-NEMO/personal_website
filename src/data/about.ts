@@ -13,12 +13,12 @@
 
 export const aboutDecor = {
   /** Written under the photo, polaroid-style. */
-  caption: "Devesh, mid-analysis",
+  caption: "Devesh, mid-build",
 
   /**
    * The sticker labels under the photo. Each one is drawn in a different
    * palette tone and at a slightly different angle, so the row reads as a set
    * of pasted-on stickers rather than a list.
    */
-  stickers: ["Retail", "Product", "Marketing"],
+  stickers: ["React", "Next.js", "TypeScript"],
 } as const;
