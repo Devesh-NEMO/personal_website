@@ -164,6 +164,7 @@ export type Project = {
   results: string[];
   tags: string[];
   href: string;
+  githubHref?: string;
   tone: CardTone;
   /**
    * Optional 16:9 thumbnail shown at the top of the card. Omit the field and

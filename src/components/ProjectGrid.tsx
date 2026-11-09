@@ -89,31 +89,56 @@ export function ProjectGrid({ projects }: { projects: Project[] }) {
                   ))}
                 </ul>
 
-                <a
-                  href={project.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  /* Built from the title so the visible "View project" is always
-                     contained in the accessible name (axe label-content-name-mismatch). */
-                  aria-label={`View project: ${project.title}`}
-                  className="mt-auto inline-flex items-center gap-1.5 pt-1 text-sm font-extrabold tracking-tight underline decoration-[3px] underline-offset-4 transition-colors hover:decoration-accent"
-                  {...trackAttrs("project_click", { name: project.title })}
-                >
-                  View project
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
+                <div className="mt-auto flex flex-wrap items-center gap-4 pt-1">
+                  <a
+                    href={project.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`View live project: ${project.title}`}
+                    className="inline-flex items-center gap-1.5 text-sm font-extrabold tracking-tight underline decoration-[3px] underline-offset-4 transition-colors hover:decoration-accent"
+                    {...trackAttrs("project_click", { name: project.title })}
                   >
-                    <path d="M7 17 17 7M8 7h9v9" />
-                  </svg>
-                </a>
+                    View project
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M7 17 17 7M8 7h9v9" />
+                    </svg>
+                  </a>
+
+                  {project.githubHref ? (
+                    <a
+                      href={project.githubHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`View GitHub repository for ${project.title}`}
+                      className="inline-flex items-center gap-1.5 text-sm font-extrabold tracking-tight underline decoration-[3px] underline-offset-4 transition-colors hover:decoration-accent"
+                    >
+                      GitHub repo
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M7 17 17 7M8 7h9v9" />
+                      </svg>
+                    </a>
+                  ) : null}
+                </div>
               </div>
             </Card>
           </Reveal>

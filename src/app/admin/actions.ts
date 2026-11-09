@@ -128,6 +128,7 @@ export async function saveProjectAction(
       .map((tag) => tag.trim())
       .filter((tag) => tag !== ""),
     href: formData.get("href"),
+    githubHref: formData.get("githubHref"),
     tone: formData.get("tone"),
     // Blank means "let the writer pick the next free number".
     priority: formData.get("priority"),

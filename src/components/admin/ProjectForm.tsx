@@ -77,9 +77,15 @@ export function ProjectForm({ project }: { project?: Project }) {
       </Field>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <Field label="Link" htmlFor="project-href" hint="Where the card points. May be empty." error={err("href")}>
-          <Input id="project-href" name="href" defaultValue={project?.href} placeholder="https://… or #" />
+        <Field label="Live Link" htmlFor="project-href" hint="Where the live project card points." error={err("href")}>
+          <Input id="project-href" name="href" defaultValue={project?.href} placeholder="https://…" />
         </Field>
+        <Field label="GitHub Repo Link" htmlFor="project-github" hint="Optional GitHub repository URL." error={err("githubHref")}>
+          <Input id="project-github" name="githubHref" defaultValue={project?.githubHref} placeholder="https://github.com/…" />
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <Field label="Card colour" htmlFor="project-tone">
           <ToneSelect id="project-tone" defaultValue={project?.tone} />
         </Field>

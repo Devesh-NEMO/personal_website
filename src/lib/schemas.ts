@@ -149,6 +149,7 @@ export const projectSchema = z.object({
     .min(1)
     .max(10),
   tags: z.array(z.string().trim().max(40)).max(20),
+  githubHref: z.string().trim().max(500).optional(),
   href: z.string().trim().max(500),
   tone: cardToneSchema,
   image: z.string().trim().max(1000).optional(),
