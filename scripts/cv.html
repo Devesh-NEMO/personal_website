@@ -42,7 +42,7 @@
       body {
         width: 210mm;
         height: 297mm;
-        padding: 11mm;
+        padding: 9mm 11mm 11mm 11mm;
         background: var(--bg);
         color: var(--ink);
         font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -69,15 +69,7 @@
       }
 
       .mark {
-        display: inline-block;
-        margin-bottom: 2.5mm;
-        padding: 1mm 2.5mm;
-        background: var(--accent);
-        border: 2pt solid var(--ink);
-        box-shadow: 2.5pt 2.5pt 0 var(--ink);
-        font-size: 10pt;
-        font-weight: 800;
-        letter-spacing: 0.02em;
+        display: none;
       }
 
       h1 {
@@ -133,7 +125,7 @@
         display: grid;
         grid-template-columns: 1fr 57mm;
         gap: 7mm;
-        margin-top: 5mm;
+        margin-top: 4mm;
       }
 
       h2 {
@@ -340,7 +332,7 @@
       footer {
         position: absolute;
         right: 11mm;
-        bottom: 7mm;
+        bottom: 9mm;
         left: 11mm;
         display: flex;
         justify-content: space-between;
