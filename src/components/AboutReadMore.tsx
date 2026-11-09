@@ -33,15 +33,11 @@ export function AboutReadMore({ paragraphs }: { paragraphs: string[] }) {
           expanded ? "h-60 sm:h-72" : "h-32 sm:h-36",
         ].join(" ")}
         onWheel={(e) => {
-          const element = e.currentTarget;
-          const atTop = element.scrollTop === 0;
-          const atBottom = element.scrollHeight - element.scrollTop === element.clientHeight;
-          
-          if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) {
-            return;
-          }
-          
+          e.preventDefault();
           e.stopPropagation();
+          
+          const element = e.currentTarget;
+          element.scrollTop += e.deltaY;
         }}
       >
         {paragraphs.map((paragraph, index) => (
